@@ -1,0 +1,9 @@
+# Ignore operating system defaults
+.DS_Store
+
+# Ignore logs
+*.logs
+
+# Ignore dotnet build
+bin
+obj

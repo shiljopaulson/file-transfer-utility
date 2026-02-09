@@ -1,0 +1,35 @@
+using System.CommandLine;
+
+namespace FileSegregator.Cli.Options;
+
+public sealed class DelimitedFileOption : Option<FileInfo>
+{
+  public DelimitedFileOption() : base("--input-file", ["-i"])
+  {
+    Description = "Delimited input file (CSV, TSV, etc.)";
+    Arity = ArgumentArity.ExactlyOne;
+    Required = true;
+    AcceptLegalFilePathsOnly();
+    AddValidators();
+  }
+
+  private void AddValidators()
+  {
+    Validators.Add(result =>
+    {
+      var file = result.GetValue<FileInfo>(Name);
+      if (file is null)
+      {
+        return;
+      }
+      if (!file.Exists)
+      {
+        result.AddError($"Option '{Name}' provided file doesn't exist or lacks permission access");
+      }
+      else if (Utility.GetEncoding(file.FullName) is null)
+      {
+        result.AddError($"Option '{Name}' provided file is not a valid delimited file");
+      }
+    });
+  }
+}
