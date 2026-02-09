@@ -1,16 +1,12 @@
 using System.CommandLine;
+using FileSegregator.Cli.Constants;
 
 namespace FileSegregator.Cli.Options;
 
 public sealed class DryRunOption : Option<bool>
 {
-  public DryRunOption() : base("--dry-run")
+  public DryRunOption() : base(OptionNames.DryRun)
   {
-    var defaultValue = false;
-    Description = $"Do not actually perform any file operations, default: {defaultValue}";
-    DefaultValueFactory = (result) =>
-    {
-      return defaultValue;
-    };
+    Description = $"Do not actually perform any file operations.";
   }
 }

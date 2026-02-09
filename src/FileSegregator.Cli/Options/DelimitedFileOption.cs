@@ -1,12 +1,13 @@
 using System.CommandLine;
+using FileSegregator.Cli.Constants;
 
 namespace FileSegregator.Cli.Options;
 
 public sealed class DelimitedFileOption : Option<FileInfo>
 {
-  public DelimitedFileOption() : base("--input-file", ["-i"])
+  public DelimitedFileOption() : base(OptionNames.DelimitedFile, OptionNames.DelimitedFileAlias)
   {
-    Description = "Delimited input file (CSV, TSV, etc.)";
+    Description = $"Delimited file (Refer {OptionNames.Delimiter} for supported delimiters).";
     Arity = ArgumentArity.ExactlyOne;
     Required = true;
     AcceptLegalFilePathsOnly();

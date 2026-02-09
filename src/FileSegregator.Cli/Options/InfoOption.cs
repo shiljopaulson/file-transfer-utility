@@ -1,16 +1,12 @@
 using System.CommandLine;
+using FileSegregator.Cli.Constants;
 
 namespace FileSegregator.Cli.Options;
 
 public sealed class InfoOption : Option<bool>
 {
-  public InfoOption() : base("--info")
+  public InfoOption() : base(OptionNames.Info)
   {
-    var defaultValue = false;
-    Description = $"Information about the application";
-    DefaultValueFactory = (result) =>
-    {
-      return defaultValue;
-    };
+    Description = $"Information about the CLI Segregator application.";
   }
 }

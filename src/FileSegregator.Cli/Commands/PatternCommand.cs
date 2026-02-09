@@ -6,11 +6,11 @@ using FileSegregator.Cli.Services;
 
 namespace FileSegregator.Cli.Commands;
 
-public sealed class FileNamePatternCommand(string name = "file", string? description = $"Segregate files using a file name patterns ({DefaultOptions.FileNamePattern})") : BaseCommand<FileNamePatternOption, SegregationDirectory>(name, description)
+public sealed class PatternCommand(string name = "pattern", string? description = $"Segregate files using a file name patterns ({DefaultOptions.FileNamePattern})") : BaseCommand<PatternOptions, SegregationDirectory>(name, description)
 {
   public override Command Create()
   {
-    Options.Add(new SourceOption());
+    Options.Add(new SourcesOption());
     Options.Add(new DestinationOption());
     Options.Add(new SearchPatternOption());
     Options.Add(new ModeOption());
@@ -22,14 +22,14 @@ public sealed class FileNamePatternCommand(string name = "file", string? descrip
     SetAction(async (parseResult, cancellationToken) =>
     {
       cancellationToken.ThrowIfCancellationRequested();
-      if (parseResult.GetValue<bool>("--help"))
+      if (parseResult.GetValue<bool>(OptionNames.Help))
       {
         Parse(OptionNames.Help).Invoke();
         return ExitCodes.Success;
       }
 
       ParsedOptions = new(
-        parseResult.GetValue<DirectoryInfo>(OptionNames.Source),
+        parseResult.GetValue<DirectoryInfo[]>(OptionNames.Sources),
         parseResult.GetValue<DirectoryInfo>(OptionNames.Destination),
         parseResult.GetValue<Mode>(OptionNames.Mode),
         parseResult.GetValue<OutputFormat>(OptionNames.OutputFormat),
@@ -52,24 +52,28 @@ public sealed class FileNamePatternCommand(string name = "file", string? descrip
       return ExitCodes.Error;
     }
 
-    var service = new FileNamePatternService(ParsedOptions);
+    var service = new PatternService(ParsedOptions);
     service.Process(cancellationToken);
     Result = service.Result;
 
     if (Result is null || Result.Files is null)
     {
+      Result?.Status = Status.Error;
       return ExitCodes.Error;
     }
     else if (Result.Files.All(x => x.Status == Status.Moved) || Result.Files.All(x => x.Status == Status.Copied))
     {
+      Result.Status = Status.Processed;
       return ExitCodes.Success;
     }
     else if (Result.Files.Any(x => x.Status == Status.Moved || x.Status == Status.Copied))
     {
+      Result.Status = Status.PartiallyProcessed;
       return ExitCodes.PartialSuccess;
     }
     else
     {
+      Result.Status = Status.Error;
       return ExitCodes.Error;
     }
   }

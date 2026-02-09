@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
+using FileSegregator.Cli.Mappers;
 using FileSegregator.Cli.Models;
 using FileSegregator.Cli.Readers;
 
@@ -20,7 +21,8 @@ public sealed class DelimitedFileService : BaseFileService<DelimitedFileOptions,
   {
     cancellationToken.ThrowIfCancellationRequested();
     if (ParsedOptions is null
-      || ParsedOptions.Source is null
+      || ParsedOptions.Sources is null
+      || ParsedOptions.Sources.Length == 0
       || ParsedOptions.Destination is null
       || ParsedOptions.InputFile is null)
     {
@@ -33,7 +35,7 @@ public sealed class DelimitedFileService : BaseFileService<DelimitedFileOptions,
 
     Result = _delimitedFileReader.Read(
       ParsedOptions.InputFile.FullName,
-      Map(ParsedOptions.Delimiter),
+      EnumMappers.Map(ParsedOptions.Delimiter),
       skipHeader,
       --fieldIndex,
       cancellationToken);
@@ -71,23 +73,21 @@ public sealed class DelimitedFileService : BaseFileService<DelimitedFileOptions,
         Trace.TraceInformation($"Not processing line number {i} due to '{Result.Lines[i].Error}'");
         continue;
       }
-
-      var sourceFilePath = Path.Combine(ParsedOptions.Source.FullName, fileName);
-      var destinationFilePath = Path.Combine(ParsedOptions.Destination.FullName, fileName);
-      Trace.TraceInformation($"Initiating {ParsedOptions.Mode} for line number {i} ({sourceFilePath})");
-      var result = CopyOrMove(sourceFilePath, destinationFilePath, cancellationToken);
-      Result.Lines[i].Status = result.Item1;
-      Result.Lines[i].Error = result.Item2;
+      for (var j = 0; j < ParsedOptions.Sources.Length; j++)
+      {
+        var status = Result.Lines[i].Status;
+        if (status == Status.Copied || status == Status.Moved)
+        {
+          j = ParsedOptions.Sources.Length;
+          continue;
+        }
+        var sourceFilePath = Path.Combine(ParsedOptions.Sources[j].FullName, fileName);
+        var destinationFilePath = Path.Combine(ParsedOptions.Destination.FullName, fileName);
+        Trace.TraceInformation($"Initiating {ParsedOptions.Mode} for line number {i} ({sourceFilePath})");
+        var result = CopyOrMove(sourceFilePath, destinationFilePath, cancellationToken);
+        Result.Lines[i].Status = result.Item1;
+        Result.Lines[i].Error = result.Item2;
+      }
     }
-  }
-
-  private static char Map(Delimiter delimiter)
-  {
-    return delimiter switch
-    {
-      Delimiter.Tab => '\t',
-      Delimiter.Pipe => '|',
-      _ => ',',
-    };
   }
 }

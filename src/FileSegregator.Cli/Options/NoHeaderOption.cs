@@ -1,16 +1,12 @@
 using System.CommandLine;
+using FileSegregator.Cli.Constants;
 
 namespace FileSegregator.Cli.Options;
 
 public sealed class NoHeaderOption : Option<bool>
 {
-  public NoHeaderOption() : base("--no-header")
+  public NoHeaderOption() : base(OptionNames.NoHeader)
   {
-    var defaultValue = false;
-    Description = $"Input file has no header row, default: {defaultValue}";
-    DefaultValueFactory = (result) =>
-    {
-      return defaultValue;
-    };
+    Description = $"Input file has no header row.";
   }
 }

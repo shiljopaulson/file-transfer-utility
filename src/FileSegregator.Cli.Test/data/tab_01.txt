@@ -2,7 +2,7 @@ Name	Grade	DOB	BG	 Fname	MNO	MNO2	Line1	Line2	Line3	Photo
 Shiljo	10	22/01/82	O+ve	Paulson	9962957321	112	Add Line10	Add Line20	Add Line30	22.txt
 AA	11	23/01/82	O+ve	A	9962957322	222	Add Line11	Add Line21	Add Line31	32.txt
 BB	12	24/01/82	O+ve	B	9962957323	332	Add Line12	Add Line22	Add Line32	42.txt
-AA	11	23/01/82	O+ve	A	9962957322	222	Add Line11	Add Line21	Add Line31	42.txt
+AA	11	23/01/82	O+ve	A	9962957322	222	Add Line11	Add Line21	Add Line31	12.txt
 
 CC	13	25/01/82	O+ve	C	9962957324	442	Add Line13	Add Line23	Add Line33	52.txt
 AA	11	23/01/82	O+ve	A	9962957322	222	Add Line11	Add Line21	Add Line31	102.txt

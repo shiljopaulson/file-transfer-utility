@@ -3,6 +3,8 @@ namespace FileSegregator.Cli.Models;
 public enum Status
 {
   Unprocessed,
+  Processed,
+  PartiallyProcessed,
   Copied,
   Moved,
   Skipped,

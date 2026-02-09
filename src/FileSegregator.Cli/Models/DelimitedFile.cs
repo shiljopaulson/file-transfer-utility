@@ -1,6 +1,12 @@
+using System.Text.Json.Serialization;
+
 namespace FileSegregator.Cli.Models;
 
-public sealed class DelimitedFile : SegregationFile
+public sealed class DelimitedFile
 {
+  public string FileName { get; set; } = string.Empty;
+  [JsonConverter(typeof(JsonStringEnumConverter))]
+  public Models.Status Status { get; set; } = Models.Status.Unprocessed;
+  public string? Error { get; set; }
   public DelimitedFileLine[]? Lines { get; set; }
 }

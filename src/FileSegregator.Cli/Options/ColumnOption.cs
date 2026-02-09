@@ -1,12 +1,13 @@
 using System.CommandLine;
+using FileSegregator.Cli.Constants;
 
 namespace FileSegregator.Cli.Options;
 
 public sealed class ColumnOption : Option<byte>
 {
-  public ColumnOption() : base("--column", "-c")
+  public ColumnOption() : base(OptionNames.Column, OptionNames.ColumnAlias)
   {
-    Description = $"Column number (1-based), default: {DefaultValueFactory}";
+    Description = $"Column number (1-based).";
     Arity = ArgumentArity.ExactlyOne;
     Required = true;
     DefaultValueFactory = (result) =>

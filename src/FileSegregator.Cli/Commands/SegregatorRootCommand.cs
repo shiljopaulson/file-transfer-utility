@@ -15,9 +15,9 @@ public sealed class SegregatorRootCommand
     rootCommand.Options.Add(new Options.InfoOption());
 
     DelimitedFileCommand delimitedFileCommand = [];
-    FileNamePatternCommand fileNamePatternCommand = [];
+    PatternCommand patternCommand = [];
     rootCommand.Subcommands.Add(delimitedFileCommand.Create());
-    rootCommand.Subcommands.Add(fileNamePatternCommand.Create());
+    rootCommand.Subcommands.Add(patternCommand.Create());
 
     rootCommand.SetAction(static async (parseResult, cancellationToken) =>
     {

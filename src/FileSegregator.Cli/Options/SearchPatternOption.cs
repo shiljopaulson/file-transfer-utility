@@ -1,12 +1,13 @@
 using System.CommandLine;
+using FileSegregator.Cli.Constants;
 
 namespace FileSegregator.Cli.Options;
 
 public sealed class SearchPatternOption : Option<string>
 {
-  public SearchPatternOption() : base("--search-pattern", ["-p"])
+  public SearchPatternOption() : base(OptionNames.SearchPattern, OptionNames.SearchPatternAlias)
   {
-    Description = $"File name pattern (Eg: *.txt, AB*.txt, A*8.txt), (Note: case sensitive), default: {DefaultValueFactory}";
+    Description = $"File name pattern (Eg: *.txt, AB*.txt, A*8.txt).";
     Arity = ArgumentArity.ExactlyOne;
     DefaultValueFactory = (result) =>
     {

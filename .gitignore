@@ -1,9 +1,32 @@
-# Ignore operating system defaults
-.DS_Store
+# Ignore Mac operating system defaults
+..DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Ignore Windows operating system defaults
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# Ignore Linux operating system defaults
+*~
+.fuse_hidden
+.directory
+.Trash-*
 
 # Ignore logs
 *.logs
+*.tmp
+
+# Ignore Visual Studio
+.vs/
+*.suo
+*.user
 
 # Ignore dotnet build
-bin
-obj
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/

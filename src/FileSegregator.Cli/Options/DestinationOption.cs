@@ -1,12 +1,13 @@
 using System.CommandLine;
+using FileSegregator.Cli.Constants;
 
 namespace FileSegregator.Cli.Options;
 
 public sealed class DestinationOption : Option<DirectoryInfo>
 {
-  public DestinationOption() : base("--destination", ["-d"])
+  public DestinationOption() : base(OptionNames.Destination, OptionNames.DestinationAlias)
   {
-    Description = "Destination directory to (copy or move) files from Source directory";
+    Description = $"Destination directory to (copy or move) files from one of the Sources ({OptionNames.Sources}) directory.";
     Arity = ArgumentArity.ExactlyOne;
     Required = true;
     AcceptLegalFilePathsOnly();
@@ -28,15 +29,19 @@ public sealed class DestinationOption : Option<DirectoryInfo>
       }
       else if (directoryInfo.Exists)
       {
-        var sourceOptionName = "--source";
-        var sourceDirectory = result.GetValue<DirectoryInfo>(sourceOptionName);
-        if (sourceDirectory is null)
+        var sources = result.GetValue<DirectoryInfo[]>(OptionNames.Sources);
+        if (sources is null || sources.Length == 0)
         {
           return;
         }
-        else if (sourceDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) == directoryInfo.FullName.TrimEnd(Path.DirectorySeparatorChar))
+        var destinationFullName = directoryInfo.FullName.TrimEnd(Path.DirectorySeparatorChar);
+        for (var i = 0; i < sources.Length; i++)
         {
-          result.AddError($"Option '{sourceOptionName}' & Option '{Name}' cannot be same directory location");
+          var sourceFullName = sources[i].FullName.TrimEnd(Path.DirectorySeparatorChar);
+          if (sourceFullName == destinationFullName)
+          {
+            result.AddError($"Option '{OptionNames.Sources}' of [{i}] & Option '{Name}' cannot be same directory location");
+          }
         }
       }
     });

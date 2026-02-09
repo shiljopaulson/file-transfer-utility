@@ -1,16 +1,12 @@
 using System.CommandLine;
+using FileSegregator.Cli.Constants;
 
 namespace FileSegregator.Cli.Options;
 
 public sealed class QuietOption : Option<bool>
 {
-  public QuietOption() : base("--quiet")
+  public QuietOption() : base(OptionNames.Quiet)
   {
-    var defaultValue = false;
-    Description = $"Execute without printing, default: {defaultValue}";
-    DefaultValueFactory = (result) =>
-    {
-      return defaultValue;
-    };
+    Description = $"Execute without printing.";
   }
 }

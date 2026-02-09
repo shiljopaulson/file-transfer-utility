@@ -1,8 +1,8 @@
 namespace FileSegregator.Cli.Models;
 
-public abstract class BaseFileOptions(DirectoryInfo? Source, DirectoryInfo? Destination, Mode Mode, OutputFormat OutputFormat, bool Overwrite, bool DryRun, bool Quiet)
+public abstract class BaseFileOptions(DirectoryInfo[]? Sources, DirectoryInfo? Destination, Mode Mode, OutputFormat OutputFormat, bool Overwrite, bool DryRun, bool Quiet)
 {
-  public DirectoryInfo? Source { get; init; } = Source;
+  public DirectoryInfo[]? Sources { get; init; } = Sources;
   public DirectoryInfo? Destination { get; init; } = Destination;
   public Mode Mode { get; init; } = Mode;
   public OutputFormat OutputFormat { get; init; } = OutputFormat;
@@ -12,6 +12,6 @@ public abstract class BaseFileOptions(DirectoryInfo? Source, DirectoryInfo? Dest
 
   public override string ToString()
   {
-    return $"Source:{Source}, Destination:{Destination}, Mode:{Mode}, OutputFormat:{OutputFormat}, Overwrite:{Overwrite}, DryRun:{DryRun}, Quiet:{Quiet}";
+    return $"Source:{Sources}, Destination:{Destination}, Mode:{Mode}, OutputFormat:{OutputFormat}, Overwrite:{Overwrite}, DryRun:{DryRun}, Quiet:{Quiet}";
   }
 }

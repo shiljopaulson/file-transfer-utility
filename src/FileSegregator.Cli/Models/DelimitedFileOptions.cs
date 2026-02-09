@@ -1,6 +1,6 @@
 namespace FileSegregator.Cli.Models;
 
-public sealed class DelimitedFileOptions(DirectoryInfo? Source, DirectoryInfo? Destination, Mode Mode, OutputFormat OutputFormat, bool Overwrite, bool DryRun, bool Quiet, FileInfo? InputFile, byte Column, bool NoHeader, Delimiter Delimiter) : BaseFileOptions(Source, Destination, Mode, OutputFormat, Overwrite, DryRun, Quiet)
+public sealed class DelimitedFileOptions(DirectoryInfo[]? Sources, DirectoryInfo? Destination, Mode Mode, OutputFormat OutputFormat, bool Overwrite, bool DryRun, bool Quiet, FileInfo? InputFile, byte Column, bool NoHeader, Delimiter Delimiter) : BaseFileOptions(Sources, Destination, Mode, OutputFormat, Overwrite, DryRun, Quiet)
 {
     public FileInfo? InputFile { get; init; } = InputFile;
     public byte Column { get; init; } = Column;

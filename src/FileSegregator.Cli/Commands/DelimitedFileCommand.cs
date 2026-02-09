@@ -17,7 +17,7 @@ public sealed class DelimitedFileCommand : BaseCommand<DelimitedFileOptions, Del
 
   public override Command Create()
   {
-    Options.Add(new SourceOption());
+    Options.Add(new SourcesOption());
     Options.Add(new DestinationOption());
     Options.Add(new DelimitedFileOption());
     Options.Add(new ColumnOption());
@@ -32,21 +32,21 @@ public sealed class DelimitedFileCommand : BaseCommand<DelimitedFileOptions, Del
     SetAction(async (parseResult, cancellationToken) =>
     {
       cancellationToken.ThrowIfCancellationRequested();
-      if (parseResult.GetValue<bool>("--help"))
+      if (parseResult.GetValue<bool>(OptionNames.Help))
       {
         Parse(OptionNames.Help).Invoke();
         return ExitCodes.Success;
       }
 
       ParsedOptions = new(
-        parseResult.GetValue<DirectoryInfo>(OptionNames.Source),
+        parseResult.GetValue<DirectoryInfo[]>(OptionNames.Sources),
         parseResult.GetValue<DirectoryInfo>(OptionNames.Destination),
         parseResult.GetValue<Mode>(OptionNames.Mode),
         parseResult.GetValue<OutputFormat>(OptionNames.OutputFormat),
         parseResult.GetValue<bool>(OptionNames.Overwrite),
         parseResult.GetValue<bool>(OptionNames.DryRun),
         parseResult.GetValue<bool>(OptionNames.Quiet),
-        parseResult.GetValue<FileInfo>(OptionNames.InputFile),
+        parseResult.GetValue<FileInfo>(OptionNames.DelimitedFile),
         parseResult.GetValue<byte>(OptionNames.Column),
         parseResult.GetValue<bool>(OptionNames.NoHeader),
         parseResult.GetValue<Delimiter>(OptionNames.Delimiter));
@@ -73,22 +73,26 @@ public sealed class DelimitedFileCommand : BaseCommand<DelimitedFileOptions, Del
       || Result.Lines is null
       || Result.Lines.Length == 0)
     {
+      Result.Status = Status.Failure;
       return ExitCodes.Failure;
     }
 
     if (Result.Lines.All(x => x.Status == Status.Moved)
       || Result.Lines.All(x => x.Status == Status.Copied))
     {
+      Result.Status = Status.Processed;
       return ExitCodes.Success;
     }
     else if (Result.Lines.Any(x =>
       x.Status == Status.Moved
       || x.Status == Status.Copied))
     {
+      Result.Status = Status.PartiallyProcessed;
       return ExitCodes.PartialSuccess;
     }
     else
     {
+      Result.Status = Status.Error;
       return ExitCodes.Error;
     }
   }
