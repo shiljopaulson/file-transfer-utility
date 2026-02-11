@@ -18,22 +18,22 @@ Description:
   Segregate files using a file names found delimited files (Comma,Tab,Pipe)
 
 Usage:
-  FileSegregator.Cli delimited [options]
+  FileSegregator delimited [options]
 
 Options:
-  -s, --sources <sources> (REQUIRED)                Sources are the directories to search for files to be copied or moved.
-  -d, --destination <destination> (REQUIRED)        Destination directory to (copy or move) files from one of the Sources
-                                                    (--sources) directory.
+  -s, --sources <sources> (REQUIRED)                 Sources are the directories to search for files to be copied or moved.
+  -d, --destination <destination> (REQUIRED)         Destination directory to (copy or move) files from one of the Sources
+                                                     (--sources) directory.
   -df, --delimited-file <delimited-file> (REQUIRED)  Delimited file (Refer --delimiter for supported delimiters).
-  -c, --column <column> (REQUIRED)                  Column number (1-based). [default: 1]
-  --delimiter <Comma|Pipe|Tab>                      Field delimiter character (Comma|Tab|Pipe). [default: Comma]
-  --no-header                                       Input file has no header row.
-  --mode <Copy|Move>                                Operation mode (Copy|Move). [default: Copy]
-  --output-format <JSON|Text>                       Output format (Text|JSON). [default: Text]
-  --overwrite                                       Overwrite existing files in destination.
-  --dry-run                                         Do not actually perform any file operations.
-  --quiet                                           Execute without printing.
-  -?, -h, --help                                    Show help and usage information
+  -c, --column <column> (REQUIRED)                   Column number (1-based). [default: 1]
+  --delimiter <Comma|Pipe|Tab>                       Field delimiter character (Comma|Tab|Pipe). [default: Comma]
+  --no-header                                        Input file has no header row.
+  --operation <Copy|Move>                            File operation (Copy|Move). [default: Copy]
+  --output-format <JSON|Text>                        Output format (Text|JSON). [default: Text]
+  --overwrite                                        Overwrite existing files in destination.
+  --dry-run                                          Do not actually perform any file operations.
+  --quiet                                            Execute without printing.
+  -?, -h, --help                                     Show help and usage information
 ```
 
 #### Example usage:
@@ -56,14 +56,14 @@ Description:
   Segregate files using a search patterns (*.*)
 
 Usage:
-  FileSegregator.Cli pattern [options]
+  FileSegregator pattern [options]
 
 Options:
   -s, --sources <sources> (REQUIRED)          Sources are the directories to search for files to be copied or moved.
   -d, --destination <destination> (REQUIRED)  Destination directory to (copy or move) files from one of the Sources
                                               (--sources) directory.
-  -sp, --search-pattern <search-pattern>       Search pattern (Eg: *.txt, AB*.txt, A*8.txt). [default: *.*]
-  --mode <Copy|Move>                          Operation mode (Copy|Move). [default: Copy]
+  -sp, --search-pattern <search-pattern>      Search pattern (Eg: *.txt, AB*.txt, A*8.txt). [default: *.*]
+  --operation <Copy|Move>                     File operation (Copy|Move). [default: Copy]
   --output-format <JSON|Text>                 Output format (Text|JSON). [default: Text]
   --overwrite                                 Overwrite existing files in destination.
   --dry-run                                   Do not actually perform any file operations.
