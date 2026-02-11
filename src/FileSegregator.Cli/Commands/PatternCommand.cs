@@ -61,6 +61,10 @@ public sealed class PatternCommand(string name = "pattern", string? description 
     {
       return ExitCodes.Error;
     }
+    else if (ParsedOptions.DryRun)
+    {
+      return ExitCodes.Success;
+    }
     else if (Result.IsAllFilesProcessed())
     {
       return ExitCodes.Success;

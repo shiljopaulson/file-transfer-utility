@@ -77,8 +77,12 @@ public sealed class DelimitedFileCommand : BaseCommand<DelimitedFileOptions, Del
       Result.Status = Status.Failure;
       return ExitCodes.Error;
     }
-
-    if (Result.IsAllLinesProcessed())
+    if (ParsedOptions.DryRun)
+    {
+      Result.Status = Status.Processed;
+      return ExitCodes.Success;
+    }
+    else if (Result.IsAllLinesProcessed())
     {
       Result.Status = Status.Processed;
       return ExitCodes.Success;
