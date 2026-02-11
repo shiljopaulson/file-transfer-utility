@@ -5,58 +5,61 @@ namespace FileSegregator.Cli.Readers;
 
 internal sealed class DirectoryReader
 {
-  public SegregationDirectory GetFiles(DirectoryInfo[] directories, string searchPattern, CancellationToken cancellationToken)
+  public SegregationDirectory GetFiles(DirectoryInfo directory, string searchPattern, CancellationToken cancellationToken)
   {
     cancellationToken.ThrowIfCancellationRequested();
-    if (directories is null || directories.Length == 0)
+    var segregationDirectory = new SegregationDirectory { Directory = directory };
+    if (directory is null || !directory.Exists)
     {
-      return new SegregationDirectory { DirectoryNames = [] };
+      segregationDirectory.Status = Status.DirectoryNotFound;
+      segregationDirectory.Message = $"Directory `{directory?.FullName}` not found.";
+      return segregationDirectory;
     }
-    var segregationDirectory = new SegregationDirectory { DirectoryNames = [.. directories.Select(x => x.FullName)] };
+    var fileInfos = new List<FileInfo>();
     try
     {
-      for (var i = 0; i < directories.Length; i++)
+      var files = directory.GetFiles(searchPattern);
+      if (files is not null && files.Length > 0)
       {
-        var files = directories[i].GetFiles(searchPattern);
-        if (files is null || files.Length == 0)
-        {
-          segregationDirectory.Status = Status.NoMatchingFilesFound;
-          segregationDirectory.Error = $"No matching files found for the search pattern '{searchPattern}'";
-          return segregationDirectory;
-        }
-        segregationDirectory.Files = [.. segregationDirectory.Files, .. files.Select(x => new SegregationFile { FileName = x.Name, Status = Status.Unprocessed })];
+        fileInfos.AddRange(files);
       }
     }
     catch (OperationCanceledException operationCanceledException)
     {
       segregationDirectory.Status = Status.OperationCanceled;
-      segregationDirectory.Error = operationCanceledException.Message;
+      segregationDirectory.Message = operationCanceledException.Message;
     }
     catch (ArgumentNullException argumentNullException)
     {
       segregationDirectory.Status = Status.Error;
-      segregationDirectory.Error = argumentNullException.Message;
+      segregationDirectory.Message = argumentNullException.Message;
     }
     catch (ArgumentException argumentException)
     {
       segregationDirectory.Status = Status.Error;
-      segregationDirectory.Error = argumentException.Message;
+      segregationDirectory.Message = argumentException.Message;
     }
     catch (DirectoryNotFoundException directoryNotFoundException)
     {
       segregationDirectory.Status = Status.Error;
-      segregationDirectory.Error = directoryNotFoundException.Message;
+      segregationDirectory.Message = directoryNotFoundException.Message;
     }
     catch (SecurityException securityException)
     {
       segregationDirectory.Status = Status.Error;
-      segregationDirectory.Error = securityException.Message;
+      segregationDirectory.Message = securityException.Message;
     }
     catch (Exception exception)
     {
       segregationDirectory.Status = Status.Error;
-      segregationDirectory.Error = exception.Message;
+      segregationDirectory.Message = exception.Message;
     }
+    if (fileInfos.Count == 0)
+    {
+      segregationDirectory.Status = Status.NoMatchingFilesFound;
+      segregationDirectory.Message = $"No matching files found for '{directory.FullName}'";
+    }
+    segregationDirectory.Files = [.. fileInfos.Select(x => new SegregationFile { File = x })];
     return segregationDirectory;
   }
 }

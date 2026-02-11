@@ -4,7 +4,7 @@ namespace FileSegregator.Cli.Constants;
 
 internal sealed class DefaultOptions
 {
-  public const Models.Mode FileMode = Models.Mode.Copy;
+  public const Models.Operation FileMode = Models.Operation.Copy;
   public const OutputFormat OutputFormat = Models.OutputFormat.Text;
   public const bool Overwrite = false;
   public const bool DryRun = false;

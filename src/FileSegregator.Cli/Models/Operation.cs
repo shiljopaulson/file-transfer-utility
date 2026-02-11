@@ -1,6 +1,6 @@
 namespace FileSegregator.Cli.Models;
 
-public enum Mode
+public enum Operation
 {
     Copy,
     Move

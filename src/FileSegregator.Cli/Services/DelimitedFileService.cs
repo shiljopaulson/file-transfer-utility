@@ -53,41 +53,91 @@ public sealed class DelimitedFileService : BaseFileService<DelimitedFileOptions,
       Trace.TraceInformation($"Delimited file reading stopped due to '{Result.Status}'.");
       return;
     }
-
     Trace.TraceInformation("Initiating Copy/Move Delimited file's all lines");
     for (int i = 0; i < Result.Lines.Length; i++)
     {
       cancellationToken.ThrowIfCancellationRequested();
       if (_fileStatusesToIgnore.Contains(Result.Lines[i].Status))
       {
-        Trace.TraceInformation($"Not processing line number {i} due to '{Result.Lines[i].Status}({Result.Lines[i].Error})'");
+        Trace.TraceInformation($"Not processing line number {i} due to '{Result.Lines[i].Status}({Result.Lines[i].Message})'");
         continue;
       }
-      var fileName = Result.Lines[i].FileName;
+      var fileName = Result.Lines[i].ColumnValue;
 
       // Just to remove code warning
       if (string.IsNullOrWhiteSpace(fileName))
       {
         Result.Lines[i].Status = Status.Error;
-        Result.Lines[i].Error = "Column Value Missing";
-        Trace.TraceInformation($"Not processing line number {i} due to '{Result.Lines[i].Error}'");
+        Result.Lines[i].Message = "Column Value Missing";
+        Trace.TraceInformation($"Not processing line number {i} due to '{Result.Lines[i].Message}'");
         continue;
       }
+      //Console.WriteLine($"\nFileName:{fileName}");
+      var uniqueFiles = new Dictionary<string, string>();
+      var fileLog = new List<FileEntry>();
       for (var j = 0; j < ParsedOptions.Sources.Length; j++)
       {
-        var status = Result.Lines[i].Status;
-        if (status == Status.Copied || status == Status.Moved)
-        {
-          j = ParsedOptions.Sources.Length;
-          continue;
-        }
         var sourceFilePath = Path.Combine(ParsedOptions.Sources[j].FullName, fileName);
         var destinationFilePath = Path.Combine(ParsedOptions.Destination.FullName, fileName);
-        Trace.TraceInformation($"Initiating {ParsedOptions.Mode} for line number {i} ({sourceFilePath})");
+
+        if (uniqueFiles.TryGetValue(fileName, out var firstFoundDirectoryName))
+        {
+          Result.Lines[i].Status = Status.Duplicate;
+          Result.Lines[i].Message = $"The file name '{fileName}' first found at '{firstFoundDirectoryName}'.";
+          fileLog.Add(FileEntry.New(fileName, Result.Lines[i].Status, Result.Lines[i].Message));
+        }
+        else
+        {
+          uniqueFiles[fileName] = sourceFilePath;
+        }
+
+        if (!ParsedOptions.Overwrite && File.Exists(destinationFilePath))
+        {
+          Result.Lines[i].Status = Status.IO;
+          Result.Lines[i].Message = $"The file '{destinationFilePath}' already exists.";
+        }
+
+        if (ParsedOptions.DryRun)
+        {
+          continue;
+        }
+
+        Trace.TraceInformation($"Initiating {ParsedOptions.Operation} for line number {i} ({sourceFilePath})");
         var result = CopyOrMove(sourceFilePath, destinationFilePath, cancellationToken);
-        Result.Lines[i].Status = result.Item1;
-        Result.Lines[i].Error = result.Item2;
+
+        fileLog.Add(FileEntry.New(fileName, result.Item1, result.Item2));
+
+        var isCurrentSuccessful = SuccessfulStatuses.Contains<Status>(result.Item1);
+        var hasCopiedOrMoved = fileLog.Exists(x => x.ColumnValue == fileName && SuccessfulStatuses.Contains<Status>(x.Status));
+        var hasDuplicate = fileLog.Exists(x => x.ColumnValue == fileName && x.Status == Status.Duplicate);
+        if (isCurrentSuccessful)
+        {
+          Result.Lines[i].Status = result.Item1;
+          Result.Lines[i].Message = result.Item2;
+        }
+        else if (hasCopiedOrMoved)
+        {
+          var entry = fileLog.Last(x => x.ColumnValue == fileName && SuccessfulStatuses.Contains<Status>(x.Status));
+          Result.Lines[i].Status = entry.Status;
+          Result.Lines[i].Message = entry.Message;
+        }
+        else
+        {
+          Result.Lines[i].Status = result.Item1;
+          Result.Lines[i].Message = result.Item2;
+        }
       }
+    }
+  }
+  private class FileEntry
+  {
+    public string? ColumnValue { get; set; }
+    public Models.Status Status { get; set; } = Models.Status.Unprocessed;
+    public string? Message { get; set; } = string.Empty;
+
+    public static FileEntry New(string? columnValue, Status status, string? message)
+    {
+      return new FileEntry { ColumnValue = columnValue, Status = status, Message = message };
     }
   }
 }

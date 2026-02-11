@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Diagnostics;
 using FileSegregator.Cli.Models;
 
@@ -15,34 +16,34 @@ public abstract class BaseFileService<TParsedOptions, TResult> : IBaseFileServic
     ArgumentNullException.ThrowIfNull(parsedOptions);
     ParsedOptions = parsedOptions;
   }
+  internal static readonly ImmutableArray<Status> SuccessfulStatuses = [Status.Copied, Status.Moved];
   internal TResult? Result;
   public readonly TParsedOptions ParsedOptions;
   public abstract void Process(CancellationToken cancellationToken);
 
-  internal (Status, string?) CopyOrMove(string sourceFilePath, string destinationFilePath, CancellationToken cancellationToken)
+  internal (Status, string) CopyOrMove(string sourceFilePath, string destinationFilePath, CancellationToken cancellationToken)
   {
     try
     {
       cancellationToken.ThrowIfCancellationRequested();
-      var fileInfo = new FileInfo(sourceFilePath);
-      if (!fileInfo.Exists && ParsedOptions.DryRun)
+      if (!File.Exists(sourceFilePath))
       {
         return (Status.FileNotFound, $"Could not find file '{sourceFilePath}'.");
       }
 
-      fileInfo = new FileInfo(destinationFilePath);
-      if (fileInfo.Exists && (ParsedOptions.DryRun || !ParsedOptions.Overwrite))
+      if (!ParsedOptions.Overwrite && File.Exists(destinationFilePath))
       {
         return (Status.IO, $"The file '{destinationFilePath}' already exists.");
       }
-      switch (ParsedOptions.Mode)
+
+      switch (ParsedOptions.Operation)
       {
-        case Mode.Move:
+        case Operation.Move:
           File.Move(sourceFilePath, destinationFilePath, ParsedOptions.Overwrite);
-          return (Status.Moved, null);
+          return (Status.Moved, $"Source: '{sourceFilePath}'");
         default:
           File.Copy(sourceFilePath, destinationFilePath, ParsedOptions.Overwrite);
-          return (Status.Copied, null);
+          return (Status.Copied, $"Source: '{sourceFilePath}'");
       }
     }
     catch (OperationCanceledException operationCanceledException)

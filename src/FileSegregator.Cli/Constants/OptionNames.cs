@@ -13,7 +13,7 @@ internal sealed class OptionNames
   public const string SourcesAlias = "-s";
   public const string Destination = "--destination";
   public const string DestinationAlias = "-d";
-  public const string Mode = "--mode";
+  public const string Operation = "--operation";
   public const string Overwrite = "--overwrite";
   public const string OutputFormat = "--output-format";
   public const string DryRun = "--dry-run";
@@ -21,7 +21,7 @@ internal sealed class OptionNames
 
   // Delimited Command options
   public const string DelimitedFile = "--delimited-file";
-  public const string DelimitedFileAlias = "-f";
+  public const string DelimitedFileAlias = "-df";
   public const string Column = "--column";
   public const string ColumnAlias = "-c";
   public const string NoHeader = "--no-header";
@@ -29,5 +29,5 @@ internal sealed class OptionNames
 
   // FileNamePattern Command options
   public const string SearchPattern = "--search-pattern";
-  public const string SearchPatternAlias = "-p";
+  public const string SearchPatternAlias = "-sp";
 }

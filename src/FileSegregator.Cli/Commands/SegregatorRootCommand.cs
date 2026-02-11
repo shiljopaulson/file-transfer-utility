@@ -24,8 +24,10 @@ public sealed class SegregatorRootCommand
       cancellationToken.ThrowIfCancellationRequested();
       if (parseResult.GetValue<bool>(OptionNames.Info))
       {
+        var (version, informationalVersion) = GetVersion();
         var stringBuilder = new StringBuilder();
-        stringBuilder.AppendLine($"Version: {GetVersion()}");
+        stringBuilder.AppendLine($"Version: {version}");
+        stringBuilder.AppendLine($"Informational Version: {informationalVersion}");
         stringBuilder.AppendLine("License: MIT License(https://mit-license.org/)");
         stringBuilder.AppendLine("Learn more: https://github.com/shiljopaulson");
         stringBuilder.AppendLine("Contributors: Shiljo Paulson");
@@ -35,8 +37,13 @@ public sealed class SegregatorRootCommand
     });
     return rootCommand;
   }
-  private static string? GetVersion()
+  private static (string?, string?) GetVersion()
   {
-    return Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+    var version = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+    if (string.IsNullOrWhiteSpace(version))
+    {
+      return (string.Empty, string.Empty);
+    }
+    return (version.Split('+')[0], version);
   }
 }

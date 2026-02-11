@@ -7,7 +7,7 @@ public sealed class SearchPatternOption : Option<string>
 {
   public SearchPatternOption() : base(OptionNames.SearchPattern, OptionNames.SearchPatternAlias)
   {
-    Description = $"File name pattern (Eg: *.txt, AB*.txt, A*8.txt).";
+    Description = $"Search pattern (Eg: *.txt, AB*.txt, A*8.txt).";
     Arity = ArgumentArity.ExactlyOne;
     DefaultValueFactory = (result) =>
     {

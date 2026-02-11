@@ -23,7 +23,7 @@ public sealed class DelimitedFileCommand : BaseCommand<DelimitedFileOptions, Del
     Options.Add(new ColumnOption());
     Options.Add(new DelimiterOption());
     Options.Add(new NoHeaderOption());
-    Options.Add(new ModeOption());
+    Options.Add(new OperationOption());
     Options.Add(new OutputFormatOption());
     Options.Add(new OverwriteOption());
     Options.Add(new DryRunOption());
@@ -41,7 +41,7 @@ public sealed class DelimitedFileCommand : BaseCommand<DelimitedFileOptions, Del
       ParsedOptions = new(
         parseResult.GetValue<DirectoryInfo[]>(OptionNames.Sources),
         parseResult.GetValue<DirectoryInfo>(OptionNames.Destination),
-        parseResult.GetValue<Mode>(OptionNames.Mode),
+        parseResult.GetValue<Operation>(OptionNames.Operation),
         parseResult.GetValue<OutputFormat>(OptionNames.OutputFormat),
         parseResult.GetValue<bool>(OptionNames.Overwrite),
         parseResult.GetValue<bool>(OptionNames.DryRun),
@@ -147,19 +147,22 @@ public sealed class DelimitedFileCommand : BaseCommand<DelimitedFileOptions, Del
       {
         case Status.Moved:
         case Status.Copied:
-          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, File: {item.FileName}", ConsoleColor.Green);
+          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, File: {item.ColumnValue}, {item.Message}", ConsoleColor.Green);
           break;
         case Status.Skipped:
           Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}", ConsoleColor.DarkGreen);
           break;
         case Status.Unprocessed:
-          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, File: {item.FileName}", ConsoleColor.Cyan);
+          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, File: {item.ColumnValue}", ConsoleColor.Cyan);
           break;
         case Status.Duplicate:
-          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, File: {item.FileName}", ConsoleColor.Yellow);
+          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, File: {item.ColumnValue} - ({item.Message})", ConsoleColor.Yellow);
+          break;
+        case Status.FileNotFound:
+          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, File: {item.ColumnValue}", ConsoleColor.DarkMagenta);
           break;
         default:
-          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, File: {item.FileName} - ({item.Error})", ConsoleColor.Red);
+          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, File: {item.ColumnValue} - ({item.Message})", ConsoleColor.Red);
           break;
       }
     }

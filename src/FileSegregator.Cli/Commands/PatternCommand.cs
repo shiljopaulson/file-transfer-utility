@@ -6,14 +6,14 @@ using FileSegregator.Cli.Services;
 
 namespace FileSegregator.Cli.Commands;
 
-public sealed class PatternCommand(string name = "pattern", string? description = $"Segregate files using a file name patterns ({DefaultOptions.FileNamePattern})") : BaseCommand<PatternOptions, SegregationDirectory>(name, description)
+public sealed class PatternCommand(string name = "pattern", string? description = $"Segregate files using a search patterns ({DefaultOptions.FileNamePattern})") : BaseCommand<PatternOptions, SegregationDirectory[]>(name, description)
 {
   public override Command Create()
   {
     Options.Add(new SourcesOption());
     Options.Add(new DestinationOption());
     Options.Add(new SearchPatternOption());
-    Options.Add(new ModeOption());
+    Options.Add(new OperationOption());
     Options.Add(new OutputFormatOption());
     Options.Add(new OverwriteOption());
     Options.Add(new DryRunOption());
@@ -31,7 +31,7 @@ public sealed class PatternCommand(string name = "pattern", string? description 
       ParsedOptions = new(
         parseResult.GetValue<DirectoryInfo[]>(OptionNames.Sources),
         parseResult.GetValue<DirectoryInfo>(OptionNames.Destination),
-        parseResult.GetValue<Mode>(OptionNames.Mode),
+        parseResult.GetValue<Operation>(OptionNames.Operation),
         parseResult.GetValue<OutputFormat>(OptionNames.OutputFormat),
         parseResult.GetValue<bool>(OptionNames.Overwrite),
         parseResult.GetValue<bool>(OptionNames.DryRun),
@@ -56,24 +56,20 @@ public sealed class PatternCommand(string name = "pattern", string? description 
     service.Process(cancellationToken);
     Result = service.Result;
 
-    if (Result is null || Result.Files is null)
+    if (Result is null || Result.Length == 0)
     {
-      Result?.Status = Status.Error;
       return ExitCodes.Error;
     }
-    else if (Result.Files.All(x => x.Status == Status.Moved) || Result.Files.All(x => x.Status == Status.Copied))
+    else if (Result.All(x => x.Status == Status.Moved) || Result.All(x => x.Status == Status.Copied))
     {
-      Result.Status = Status.Processed;
       return ExitCodes.Success;
     }
-    else if (Result.Files.Any(x => x.Status == Status.Moved || x.Status == Status.Copied))
+    else if (Result.Any(x => x.Status == Status.Moved || x.Status == Status.Copied))
     {
-      Result.Status = Status.PartiallyProcessed;
       return ExitCodes.PartialSuccess;
     }
     else
     {
-      Result.Status = Status.Error;
       return ExitCodes.Error;
     }
   }
@@ -83,15 +79,13 @@ public sealed class PatternCommand(string name = "pattern", string? description 
     if (ParsedOptions is null
       || ParsedOptions.Quiet
       || Result is null
-      || Result.Files is null
-      || Result.Files.Length == 0)
+      || Result.Length == 0)
     {
       return;
     }
-
     if (ParsedOptions.OutputFormat == OutputFormat.JSON)
     {
-      ConsoleJson();
+      Console.WriteLine(Utility.ToJson(Result));
     }
     else
     {
@@ -99,45 +93,35 @@ public sealed class PatternCommand(string name = "pattern", string? description 
     }
   }
 
-  private void ConsoleJson()
-  {
-    if (Result is null
-      || Result.Files is null
-      || Result.Files.Length == 0)
-    {
-      return;
-    }
-    Console.WriteLine(Utility.ToJson(Result));
-  }
-
   private void ConsoleText()
   {
-    if (Result is null
-      || Result.Files is null
-      || Result.Files.Length == 0)
+    if (Result is null)
     {
       return;
     }
-    foreach (var item in Result.Files)
+    foreach (var directory in Result)
     {
-      switch (item.Status)
+      foreach (var file in directory.Files)
       {
-        case Status.Moved:
-        case Status.Copied:
-          Utility.WriteLine($"Status: {item.Status}, File: {item.FileName}", ConsoleColor.Green);
-          break;
-        case Status.Skipped:
-          Utility.WriteLine($"Status: {item.Status}", ConsoleColor.DarkGreen);
-          break;
-        case Status.Unprocessed:
-          Utility.WriteLine($"Status: {item.Status}, File: {item.FileName}", ConsoleColor.Cyan);
-          break;
-        case Status.Duplicate:
-          Utility.WriteLine($"Status: {item.Status}, File: {item.FileName}", ConsoleColor.Yellow);
-          break;
-        default:
-          Utility.WriteLine($"Status: {item.Status}, File: {item.FileName} - ({item.Error})", ConsoleColor.Red);
-          break;
+        switch (file.Status)
+        {
+          case Status.Moved:
+          case Status.Copied:
+            Utility.WriteLine($"Status: {file.Status}, File: {file.File}", ConsoleColor.Green);
+            break;
+          case Status.Skipped:
+            Utility.WriteLine($"Status: {file.Status}", ConsoleColor.DarkGreen);
+            break;
+          case Status.Unprocessed:
+            Utility.WriteLine($"Status: {file.Status}, File: {file.File}", ConsoleColor.Cyan);
+            break;
+          case Status.Duplicate:
+            Utility.WriteLine($"Status: {file.Status}, File: {file.File} - ({file.Message})", ConsoleColor.Yellow);
+            break;
+          default:
+            Utility.WriteLine($"Status: {file.Status}, File: {file.File} - ({file.Message})", ConsoleColor.Red);
+            break;
+        }
       }
     }
   }
