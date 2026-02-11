@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Linq;
 
 namespace FileSegregator.Cli.Models;
 

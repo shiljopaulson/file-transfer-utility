@@ -13,6 +13,7 @@ public enum Status
   Duplicate,
   DirectoryNotFound,
   FileNotFound,
+  FileFound,
   NoMatchingFilesFound,
   IO,
   ArgumentNull,

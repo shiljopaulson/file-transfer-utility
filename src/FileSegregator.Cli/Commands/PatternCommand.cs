@@ -1,5 +1,6 @@
 using System.CommandLine;
 using FileSegregator.Cli.Constants;
+using FileSegregator.Cli.Extensions;
 using FileSegregator.Cli.Models;
 using FileSegregator.Cli.Options;
 using FileSegregator.Cli.Services;
@@ -60,11 +61,11 @@ public sealed class PatternCommand(string name = "pattern", string? description 
     {
       return ExitCodes.Error;
     }
-    else if (Result.All(x => x.Status == Status.Moved) || Result.All(x => x.Status == Status.Copied))
+    else if (Result.IsAllFilesProcessed())
     {
       return ExitCodes.Success;
     }
-    else if (Result.Any(x => x.Status == Status.Moved || x.Status == Status.Copied))
+    else if (Result.HasAnyFilesProcessed())
     {
       return ExitCodes.PartialSuccess;
     }
@@ -73,6 +74,8 @@ public sealed class PatternCommand(string name = "pattern", string? description 
       return ExitCodes.Error;
     }
   }
+
+
 
   internal override void Print(CancellationToken cancellationToken)
   {
@@ -107,19 +110,22 @@ public sealed class PatternCommand(string name = "pattern", string? description 
         {
           case Status.Moved:
           case Status.Copied:
-            Utility.WriteLine($"Status: {file.Status}, File: {file.File}", ConsoleColor.Green);
+            Utility.WriteLine($"Status: {file.Status}, File: {file.File.Name}", ConsoleColor.Green);
             break;
           case Status.Skipped:
             Utility.WriteLine($"Status: {file.Status}", ConsoleColor.DarkGreen);
             break;
           case Status.Unprocessed:
-            Utility.WriteLine($"Status: {file.Status}, File: {file.File}", ConsoleColor.Cyan);
+            Utility.WriteLine($"Status: {file.Status}, File: {file.File.Name}", ConsoleColor.Cyan);
+            break;
+          case Status.FileFound:
+            Utility.WriteLine($"Status: {file.Status}, File: {file.File.Name}", ConsoleColor.Cyan);
             break;
           case Status.Duplicate:
-            Utility.WriteLine($"Status: {file.Status}, File: {file.File} - ({file.Message})", ConsoleColor.Yellow);
+            Utility.WriteLine($"Status: {file.Status}, File: {file.File.Name} - ({file.Message})", ConsoleColor.Yellow);
             break;
           default:
-            Utility.WriteLine($"Status: {file.Status}, File: {file.File} - ({file.Message})", ConsoleColor.Red);
+            Utility.WriteLine($"Status: {file.Status}, File: {file.File.Name} - ({file.Message})", ConsoleColor.Red);
             break;
         }
       }

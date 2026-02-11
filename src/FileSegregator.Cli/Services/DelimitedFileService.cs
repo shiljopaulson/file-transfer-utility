@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
+using FileSegregator.Cli.Constants;
 using FileSegregator.Cli.Mappers;
 using FileSegregator.Cli.Models;
 using FileSegregator.Cli.Readers;
@@ -80,36 +81,68 @@ public sealed class DelimitedFileService : BaseFileService<DelimitedFileOptions,
         var sourceFilePath = Path.Combine(ParsedOptions.Sources[j].FullName, fileName);
         var destinationFilePath = Path.Combine(ParsedOptions.Destination.FullName, fileName);
 
-        if (uniqueFiles.TryGetValue(fileName, out var firstFoundDirectoryName))
-        {
-          Result.Lines[i].Status = Status.Duplicate;
-          Result.Lines[i].Message = $"The file name '{fileName}' first found at '{firstFoundDirectoryName}'.";
-          fileLog.Add(FileEntry.New(fileName, Result.Lines[i].Status, Result.Lines[i].Message));
-        }
-        else
+        if (!uniqueFiles.TryGetValue(fileName, out var _))
         {
           uniqueFiles[fileName] = sourceFilePath;
         }
 
-        if (!ParsedOptions.Overwrite && File.Exists(destinationFilePath))
-        {
-          Result.Lines[i].Status = Status.IO;
-          Result.Lines[i].Message = $"The file '{destinationFilePath}' already exists.";
-        }
-
         if (ParsedOptions.DryRun)
         {
+          var (sourceFileStatus, sourceFileMessage) = FileExist(sourceFilePath, cancellationToken);
+          fileLog.Add(FileEntry.New(fileName, sourceFileStatus, sourceFileMessage));
+
+          var (destinationFileStatus, destinationFileMessage) = FileExist(destinationFilePath, cancellationToken);
+          if (destinationFileStatus == Status.FileFound)
+          {
+            fileLog.Add(FileEntry.New(fileName, Status.IO, destinationFileMessage));
+          }
+
+          if (fileLog.Count > 0 && j == (ParsedOptions.Sources.Length - 1))
+          {
+            var foundFileAtSource = fileLog.Exists(x => x.Status == Status.FileFound);
+            var noFoundFileAtAnySource = fileLog.Exists(x => x.Status == Status.FileNotFound);
+            if (!foundFileAtSource && noFoundFileAtAnySource)
+            {
+              Result.Lines[i].Status = Status.IO;
+              Result.Lines[i].Message = $"File not found at any of the '{OptionNames.Sources}' locations.";
+            }
+            else if (ParsedOptions.Overwrite)
+            {
+              var entry = fileLog.Last(x => x.Status == Status.FileFound);
+              Result.Lines[i].Status = entry.Status;
+              Result.Lines[i].Message = entry.Message;
+            }
+            else
+            {
+              var entry = fileLog.First(x => x.Status == Status.FileFound);
+              Result.Lines[i].Status = entry.Status;
+              Result.Lines[i].Message = entry.Message;
+            }
+
+            if (ParsedOptions.Overwrite)
+            {
+              continue;
+            }
+            var destinationHasFile = fileLog.Exists(x => x.Status == Status.IO);
+            if (destinationHasFile)
+            {
+              Result.Lines[i].Status = Status.IO;
+              Result.Lines[i].Message = $"{Result.Lines[i].Message}File all ready exist at {OptionNames.Destination}('{destinationFilePath}')";
+            }
+          }
+
           continue;
         }
 
         Trace.TraceInformation($"Initiating {ParsedOptions.Operation} for line number {i} ({sourceFilePath})");
         var result = CopyOrMove(sourceFilePath, destinationFilePath, cancellationToken);
-
         fileLog.Add(FileEntry.New(fileName, result.Item1, result.Item2));
 
         var isCurrentSuccessful = SuccessfulStatuses.Contains<Status>(result.Item1);
-        var hasCopiedOrMoved = fileLog.Exists(x => x.ColumnValue == fileName && SuccessfulStatuses.Contains<Status>(x.Status));
-        var hasDuplicate = fileLog.Exists(x => x.ColumnValue == fileName && x.Status == Status.Duplicate);
+        var hasCopiedOrMoved = fileLog.Exists(
+          x => x.ColumnValue == fileName
+          && SuccessfulStatuses.Contains<Status>(x.Status));
+
         if (isCurrentSuccessful)
         {
           Result.Lines[i].Status = result.Item1;
@@ -117,7 +150,9 @@ public sealed class DelimitedFileService : BaseFileService<DelimitedFileOptions,
         }
         else if (hasCopiedOrMoved)
         {
-          var entry = fileLog.Last(x => x.ColumnValue == fileName && SuccessfulStatuses.Contains<Status>(x.Status));
+          var entry = fileLog.Last(
+            x => x.ColumnValue == fileName
+            && SuccessfulStatuses.Contains<Status>(x.Status));
           Result.Lines[i].Status = entry.Status;
           Result.Lines[i].Message = entry.Message;
         }

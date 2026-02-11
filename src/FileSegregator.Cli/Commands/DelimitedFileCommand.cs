@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Diagnostics;
 using FileSegregator.Cli.Constants;
+using FileSegregator.Cli.Extensions;
 using FileSegregator.Cli.Models;
 using FileSegregator.Cli.Options;
 using FileSegregator.Cli.Readers;
@@ -74,18 +75,15 @@ public sealed class DelimitedFileCommand : BaseCommand<DelimitedFileOptions, Del
       || Result.Lines.Length == 0)
     {
       Result.Status = Status.Failure;
-      return ExitCodes.Failure;
+      return ExitCodes.Error;
     }
 
-    if (Result.Lines.All(x => x.Status == Status.Moved)
-      || Result.Lines.All(x => x.Status == Status.Copied))
+    if (Result.IsAllLinesProcessed())
     {
       Result.Status = Status.Processed;
       return ExitCodes.Success;
     }
-    else if (Result.Lines.Any(x =>
-      x.Status == Status.Moved
-      || x.Status == Status.Copied))
+    else if (Result.HasAnyLinesProcessed())
     {
       Result.Status = Status.PartiallyProcessed;
       return ExitCodes.PartialSuccess;
@@ -154,6 +152,9 @@ public sealed class DelimitedFileCommand : BaseCommand<DelimitedFileOptions, Del
           break;
         case Status.Unprocessed:
           Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, File: {item.ColumnValue}", ConsoleColor.Cyan);
+          break;
+        case Status.FileFound:
+          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, File: {item.ColumnValue} - ({item.Message})", ConsoleColor.Cyan);
           break;
         case Status.Duplicate:
           Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, File: {item.ColumnValue} - ({item.Message})", ConsoleColor.Yellow);

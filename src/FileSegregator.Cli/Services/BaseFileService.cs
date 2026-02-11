@@ -21,6 +21,22 @@ public abstract class BaseFileService<TParsedOptions, TResult> : IBaseFileServic
   public readonly TParsedOptions ParsedOptions;
   public abstract void Process(CancellationToken cancellationToken);
 
+  internal (Status, string) FileExist(string filePath, CancellationToken cancellationToken)
+  {
+    cancellationToken.ThrowIfCancellationRequested();
+    try
+    {
+      var fileExists = File.Exists(filePath);
+      return fileExists
+        ? (Status.FileFound, $"File found at '{filePath}'")
+        : (Status.FileNotFound, $"File not found at '{filePath}'");
+    }
+    catch (Exception exception)
+    {
+      return (Status.FileNotFound, exception.Message);
+    }
+  }
+
   internal (Status, string) CopyOrMove(string sourceFilePath, string destinationFilePath, CancellationToken cancellationToken)
   {
     try

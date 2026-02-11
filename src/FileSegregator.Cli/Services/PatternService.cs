@@ -27,6 +27,7 @@ public sealed class PatternService(PatternOptions parsedOptions) : BaseFileServi
     Result = segregationDirectories;
 
     var uniqueFiles = new Dictionary<string, string>();
+    var fileLog = new List<FileEntry>();
     for (var i = 0; i < Result.Length; i++)
     {
       if (Result[i].Status != Status.Unprocessed)
@@ -34,7 +35,6 @@ public sealed class PatternService(PatternOptions parsedOptions) : BaseFileServi
         Trace.TraceInformation($"Directory:'{Result[i].Directory?.FullName}', Status:'{Result[i].Status}', Message:{Result[i]?.Message}");
         continue;
       }
-      var fileLog = new List<FileEntry>();
       for (var j = 0; j < Result[i].Files.Length; j++)
       {
         var fileName = Result[i].Files[j].File.FullName.Split(Path.DirectorySeparatorChar).Last();
@@ -43,19 +43,27 @@ public sealed class PatternService(PatternOptions parsedOptions) : BaseFileServi
 
         if (uniqueFiles.TryGetValue(fileName, out var firstFoundDirectoryName))
         {
+          var firstOrCurrentPath = ParsedOptions.Overwrite ? sourceFilePath : firstFoundDirectoryName;
+          var operationName = ParsedOptions.Operation == Operation.Copy ? "copied" : "moved";
           Result[i].Files[j].Status = Status.Duplicate;
-          Result[i].Files[j].Message = $"The file name '{fileName}' first found at '{firstFoundDirectoryName}'.";
+          Result[i].Files[j].Message = $"The file '{fileName}' will be {operationName} from '{firstOrCurrentPath}'.";
           fileLog.Add(FileEntry.New(fileName, Result[i].Files[j].Status, Result[i].Files[j].Message));
         }
         else
         {
+          Result[i].Files[j].Status = Status.FileFound;
           uniqueFiles[fileName] = sourceFilePath;
         }
 
-        if (!ParsedOptions.Overwrite && Result[i].Files[j].Status == Status.Unprocessed && File.Exists(destinationFilePath))
+        if (!ParsedOptions.Overwrite)
         {
-          Result[i].Files[j].Status = Status.IO;
-          Result[i].Files[j].Message = $"The file '{destinationFilePath}' already exists.";
+          var (destinationFileStatus, destinationFileMessage) = FileExist(destinationFilePath, cancellationToken);
+          if (destinationFileStatus == Status.FileFound)
+          {
+            Result[i].Files[j].Status = Status.IO;
+            Result[i].Files[j].Message = destinationFileMessage;
+            fileLog.Add(FileEntry.New(fileName, Status.IO, destinationFileMessage));
+          }
         }
 
         if (ParsedOptions.DryRun)
@@ -69,7 +77,7 @@ public sealed class PatternService(PatternOptions parsedOptions) : BaseFileServi
 
         var isCurrentSuccessful = SuccessfulStatuses.Contains<Status>(result.Item1);
         var hasCopiedOrMoved = fileLog.Exists(x => x.FileName == fileName && SuccessfulStatuses.Contains<Status>(x.Status));
-        var hasDuplicate = fileLog.Exists(x => x.FileName == fileName && x.Status == Status.Duplicate);
+        //var hasDuplicate = fileLog.Exists(x => x.FileName == fileName && x.Status == Status.Duplicate);
         if (isCurrentSuccessful)
         {
           Result[i].Files[j].Status = result.Item1;
