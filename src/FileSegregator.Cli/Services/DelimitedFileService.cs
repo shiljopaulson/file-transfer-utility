@@ -94,7 +94,7 @@ public sealed class DelimitedFileService : BaseFileService<DelimitedFileOptions,
           var (destinationFileStatus, destinationFileMessage) = FileExist(destinationFilePath, cancellationToken);
           if (destinationFileStatus == Status.FileFound)
           {
-            fileLog.Add(FileEntry.New(fileName, Status.IO, destinationFileMessage));
+            fileLog.Add(FileEntry.New(fileName, Status.FileFoundAtDestination, destinationFileMessage));
           }
 
           if (fileLog.Count > 0 && j == (ParsedOptions.Sources.Length - 1))
@@ -103,7 +103,7 @@ public sealed class DelimitedFileService : BaseFileService<DelimitedFileOptions,
             var noFoundFileAtAnySource = fileLog.Exists(x => x.Status == Status.FileNotFound);
             if (!foundFileAtSource && noFoundFileAtAnySource)
             {
-              Result.Lines[i].Status = Status.IO;
+              Result.Lines[i].Status = Status.FileNotFoundAtSources;
               Result.Lines[i].Message = $"File not found at any of the '{OptionNames.Sources}' locations.";
             }
             else if (ParsedOptions.Overwrite)
@@ -123,10 +123,10 @@ public sealed class DelimitedFileService : BaseFileService<DelimitedFileOptions,
             {
               continue;
             }
-            var destinationHasFile = fileLog.Exists(x => x.Status == Status.IO);
+            var destinationHasFile = fileLog.Exists(x => x.Status == Status.FileFoundAtDestination);
             if (destinationHasFile)
             {
-              Result.Lines[i].Status = Status.IO;
+              Result.Lines[i].Status = Status.FileFoundAtDestination;
               Result.Lines[i].Message = $"{Result.Lines[i].Message}File all ready exist at {OptionNames.Destination}('{destinationFilePath}')";
             }
           }

@@ -15,6 +15,8 @@ public enum Status
   FileNotFound,
   FileFound,
   NoMatchingFilesFound,
+  FileFoundAtDestination,
+  FileNotFoundAtSources,
   IO,
   ArgumentNull,
   Argument,

@@ -60,9 +60,9 @@ public sealed class PatternService(PatternOptions parsedOptions) : BaseFileServi
           var (destinationFileStatus, destinationFileMessage) = FileExist(destinationFilePath, cancellationToken);
           if (destinationFileStatus == Status.FileFound)
           {
-            Result[i].Files[j].Status = Status.IO;
+            Result[i].Files[j].Status = Status.FileFoundAtDestination;
             Result[i].Files[j].Message = destinationFileMessage;
-            fileLog.Add(FileEntry.New(fileName, Status.IO, destinationFileMessage));
+            fileLog.Add(FileEntry.New(fileName, Status.FileFoundAtDestination, destinationFileMessage));
           }
         }
 
