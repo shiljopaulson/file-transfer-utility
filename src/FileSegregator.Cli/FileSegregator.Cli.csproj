@@ -17,11 +17,9 @@
 
   <ItemGroup>
     <Folder Include="Commands/" />
-    <Folder Include="Configurations/" />
     <Folder Include="Constants/" />
     <Folder Include="Mappers/" />
     <Folder Include="Models/" />
-    <Folder Include="Options/" />
     <Folder Include="Readers/" />
     <Folder Include="Services/" />
   </ItemGroup>

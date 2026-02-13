@@ -1,6 +1,6 @@
 # File Segregator
 
-The File Segregator is an CLI application which copies or moves files from multiple source directories to the destination directory based on the `delimited file` (csv, tsv, psv) or `search pattern` (_.png, _.\*).
+The File Segregator is an CLI application which copies or moves files from multiple source directories to the destination directory based on the `delimited file` (csv, tsv, psv) or `search pattern` (\*.png, \*.\*).
 
 ## How does it work
 

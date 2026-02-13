@@ -11,9 +11,4 @@ public class DelimitedFileLine
   [JsonConverter(typeof(JsonStringEnumConverter))]
   public Models.Status Status { get; set; } = Models.Status.Unprocessed;
   public string? Message { get; set; }
-
-  public override string ToString()
-  {
-    return $"Number:{Number}, Data:{Data}, Column:{ColumnValue}, OriginalAt:{OriginalAt}, Status:{Status}, Message:{Message},";
-  }
 }

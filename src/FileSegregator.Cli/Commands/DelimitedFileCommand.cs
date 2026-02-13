@@ -23,8 +23,8 @@ public sealed class DelimitedFileCommand : BaseCommand<DelimitedFileOptions, Del
     Options.Add(new DelimitedFileOption());
     Options.Add(new ColumnOption());
     Options.Add(new DelimiterOption());
-    Options.Add(new NoHeaderOption());
     Options.Add(new OperationOption());
+    Options.Add(new NoHeaderOption());
     Options.Add(new OutputFormatOption());
     Options.Add(new OverwriteOption());
     Options.Add(new DryRunOption());

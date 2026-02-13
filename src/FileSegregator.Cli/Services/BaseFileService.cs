@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
 using FileSegregator.Cli.Models;
+using FileSegregator.Cli.Options;
 
 namespace FileSegregator.Cli.Services;
 

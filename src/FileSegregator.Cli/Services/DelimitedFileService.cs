@@ -3,6 +3,7 @@ using System.Diagnostics;
 using FileSegregator.Cli.Constants;
 using FileSegregator.Cli.Mappers;
 using FileSegregator.Cli.Models;
+using FileSegregator.Cli.Options;
 using FileSegregator.Cli.Readers;
 
 namespace FileSegregator.Cli.Services;
