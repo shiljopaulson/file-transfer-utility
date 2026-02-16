@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Sphere.FileTransfer.Cli/Sphere.FileTransfer.Cli.csproj" />
+    <Project Path="src/Sphere.FileTransfer.Models/Sphere.FileTransfer.Models.csproj" />
+    <Project Path="src/Sphere.FileTransfer.Services/Sphere.FileTransfer.Services.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,33 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET Launch",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/Sphere.FileTransfer.Cli/bin/Debug/net10.0/FileSegregator.Cli.dll",
+      "console": "integratedTerminal",
+      "args": [
+        "delimited",
+        "--sources",
+        "~/Documents/test/sources/01",
+        "--sources",
+        "~/Documents/test/sources/02",
+        "--destination",
+        "~/Documents/test/destination/",
+        "--delimited-file",
+        "~/Documents/test/delimited_files/tab_02.txt",
+        "--column",
+        "11",
+        "--delimiter",
+        "tab",
+        "--dry-run"
+      ],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false
+    }
+  ]
+}
