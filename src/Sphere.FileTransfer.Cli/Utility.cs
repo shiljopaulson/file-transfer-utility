@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 
@@ -75,5 +76,15 @@ public static class Utility
       // Handle potential file access errors
       return false;
     }
+  }
+
+  public static (string?, string?) GetVersion()
+  {
+    var version = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+    if (string.IsNullOrWhiteSpace(version))
+    {
+      return (string.Empty, string.Empty);
+    }
+    return (version.Split('+')[0], version);
   }
 }

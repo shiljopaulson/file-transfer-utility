@@ -1,9 +1,9 @@
 namespace Sphere.FileTransfer.Services.Models;
 
-public sealed class SegregatedDirectory(string directoryPath)
+public sealed class SegregatedDirectory
 {
-  public required string DirectoryPath { get; init; } = directoryPath;
-  public FileStatus Status { get; set; } = FileStatus.Unprocessed;
+  public required string DirectoryPath { get; set; }
+  public DirectoryStatus Status { get; set; } = DirectoryStatus.Unprocessed;
   public string? Message { get; set; }
   public SegregatedFile[]? Files { get; set; }
 }

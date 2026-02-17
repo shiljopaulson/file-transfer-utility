@@ -1,68 +1,73 @@
-using System.Text;
+using FluentValidation;
 using Sphere.FileTransfer.Models;
 using Sphere.FileTransfer.Services.Models;
 using Sphere.FileTransfer.Services.Readers;
 
 namespace Sphere.FileTransfer.Services;
 
-public interface IDelimitedFileService
+public interface IDelimitedService
 {
-  Task<DelimitedFile> Process(DelimitedFileOptions delimitedFileOptions, CancellationToken cancellationToken);
+  Task<DelimitedFile> Process(DelimitedOptions delimitedOptions, CancellationToken cancellationToken);
 }
 
-public class DelimitedFileService : BaseFileService, IDelimitedFileService
+public class DelimitedService : BaseFileService, IDelimitedService
 {
-  private readonly IDelimitedFileReader _delimitedFileReader;
+  private readonly IDelimitedReader _delimitedReader;
+  private readonly AbstractValidator<DelimitedOptions> _delimitedOptionsValidator;
 
-  public DelimitedFileService(IDelimitedFileReader delimitedFileReader)
+  public DelimitedService(IDelimitedReader delimitedReader, AbstractValidator<DelimitedOptions> delimitedOptionsValidator)
   {
-    ArgumentNullException.ThrowIfNull(delimitedFileReader);
-    _delimitedFileReader = delimitedFileReader;
+    _delimitedReader = delimitedReader;
+    _delimitedOptionsValidator = delimitedOptionsValidator;
   }
 
-  public async Task<DelimitedFile> Process(DelimitedFileOptions delimitedFileOptions, CancellationToken cancellationToken)
+  public async Task<DelimitedFile> Process(DelimitedOptions delimitedOptions, CancellationToken cancellationToken)
   {
     Console.WriteLine("Services.Process");
     cancellationToken.ThrowIfCancellationRequested();
 
-    ThrowOnAnyValidationFails(delimitedFileOptions);
-    var sources = delimitedFileOptions.Sources;
-    var destination = delimitedFileOptions.Destination;
-    var delimitedFile = delimitedFileOptions.DelimitedFile;
-    var column = delimitedFileOptions.Column;
-    var fieldIndex = column - 1;
-    var overwrite = delimitedFileOptions.Overwrite;
-    var operation = delimitedFileOptions.Operation;
-    var dryRun = delimitedFileOptions.DryRun;
-    var delimiter = delimitedFileOptions.Delimiter;
-
-    var delimitedFileResult = _delimitedFileReader.Read(delimitedFile.FullName, delimiter, !delimitedFileOptions.NoHeader, cancellationToken);
-    if (delimitedFileResult is null
-      || delimitedFileResult.Lines is null
-      || delimitedFileResult.Lines.Length == 0)
+    var validationResult = await _delimitedOptionsValidator.ValidateAsync(delimitedOptions, cancellationToken);
+    if (!validationResult.IsValid)
     {
-      return delimitedFileResult;
+      var errors = validationResult.Errors;
+    }
+    var sources = delimitedOptions.Sources;
+    var destination = delimitedOptions.Destination;
+    var delimitedFile = delimitedOptions.File;
+    var column = delimitedOptions.Column;
+    var fieldIndex = column - 1;
+    var overwrite = delimitedOptions.Overwrite;
+    var operation = delimitedOptions.Operation;
+    var dryRun = delimitedOptions.DryRun;
+    var delimiter = delimitedOptions.Delimiter;
+
+    var delimitedResult = _delimitedReader.Read(delimitedFile.FullName, delimiter, !delimitedOptions.NoHeader, cancellationToken);
+    if (delimitedResult is null
+      || delimitedResult.Lines is null
+      || delimitedResult.Lines.Length == 0)
+    {
+      return new DelimitedFile { FileFullName = delimitedOptions.File.FullName };
     }
     var uniqueFiles = new Dictionary<string, DetailedFileInfo[]>();
-    for (var i = 0; i < delimitedFileResult.Lines.Length; i++)
+    for (var i = 0; i < delimitedResult.Lines.Length; i++)
     {
       //Console.WriteLine($"{delimitedFileResult.Lines[i].Data}");
       cancellationToken.ThrowIfCancellationRequested();
 
-      var (status, message) = LineValidation(delimitedFileResult.Lines[i], fieldIndex);
-      delimitedFileResult.Lines[i].Status = status;
-      delimitedFileResult.Lines[i].Message = message;
+      var (status, message) = LineValidation(delimitedResult.Lines[i], fieldIndex);
+      delimitedResult.Lines[i].Status = status;
+      delimitedResult.Lines[i].Message = message;
       if (status != LineStatus.Unprocessed)
       {
         continue;
       }
 
-      var fileName = delimitedFileResult.Lines[i].DelimitedFields[fieldIndex].Trim();
+      var fileName = delimitedResult.Lines[i].DelimitedFields[fieldIndex].Trim();
       var destinationFilePath = Path.Combine(destination.FullName, fileName);
       if (uniqueFiles.TryGetValue(fileName, out var detailedFileInfos))
       {
-        delimitedFileResult.Lines[i].Status = LineStatus.Duplicate;
-        delimitedFileResult.Lines[i].Message = $"File entry initially found at '{detailedFileInfos.First().LineNumber}'";
+        delimitedResult.Lines[i].Status = LineStatus.Duplicate;
+        delimitedResult.Lines[i].Message = $"File entry initially found at '{detailedFileInfos.First().LineNumber}'";
         continue;
       }
       else
@@ -106,8 +111,8 @@ public class DelimitedFileService : BaseFileService, IDelimitedFileService
         {
           if (dryRun)
           {
-            delimitedFileResult.Lines[i].Status = LineStatus.Unprocessed;
-            delimitedFileResult.Lines[i].Message = sourceFound.Message;
+            delimitedResult.Lines[i].Status = LineStatus.Unprocessed;
+            delimitedResult.Lines[i].Message = sourceFound.Message;
           }
           else
           {
@@ -115,8 +120,8 @@ public class DelimitedFileService : BaseFileService, IDelimitedFileService
               ? fileInfos.SelectMany(x => x.Statuses).LastOrDefault(x => x.Status == Status.SourceFileFound)
               : fileInfos.SelectMany(x => x.Statuses).FirstOrDefault(x => x.Status == Status.SourceFileFound);
             var (fileStatus, fileMessage) = CopyOrMove(detailedFileStatus.FilePath, destinationFilePath, operation, overwrite, cancellationToken);
-            delimitedFileResult.Lines[i].Status = Mappers.Map(fileStatus);
-            delimitedFileResult.Lines[i].Message = fileMessage;
+            delimitedResult.Lines[i].Status = Mappers.Map(fileStatus);
+            delimitedResult.Lines[i].Message = fileMessage;
           }
         }
 
@@ -131,51 +136,12 @@ public class DelimitedFileService : BaseFileService, IDelimitedFileService
         }
         if (errorList.Count > 0)
         {
-          delimitedFileResult.Lines[i].Status = LineStatus.Error;
-          delimitedFileResult.Lines[i].Message = string.Join(", ", errorList);
+          delimitedResult.Lines[i].Status = LineStatus.Error;
+          delimitedResult.Lines[i].Message = string.Join(", ", errorList);
         }
       }
     }
-    return delimitedFileResult;
-  }
-
-  private static void ThrowOnAnyValidationFails(DelimitedFileOptions delimitedFileOptions)
-  {
-    ArgumentNullException.ThrowIfNull(delimitedFileOptions);
-    var sources = delimitedFileOptions.Sources;
-    ArgumentNullException.ThrowIfNull(sources);
-    if (sources.Length == 0)
-    {
-      throw new ArgumentException($"'{nameof(sources)}' missing");
-    }
-    if (!sources.All(x => x.Exists))
-    {
-      throw new DirectoryNotFoundException($"one or more '{nameof(sources)}' directory not found");
-    }
-
-    var destination = delimitedFileOptions.Destination;
-    ArgumentNullException.ThrowIfNull(destination);
-    if (!destination.Exists)
-    {
-      throw new DirectoryNotFoundException($"'{nameof(destination)}' directory not found");
-    }
-    if (sources.Any(x => x.FullName == destination.FullName))
-    {
-      throw new ArgumentException($"one or more '{nameof(sources)}' directory is same as {nameof(destination)}");
-    }
-
-    var delimitedFile = delimitedFileOptions.DelimitedFile;
-    ArgumentNullException.ThrowIfNull(delimitedFile);
-    if (!delimitedFile.Exists)
-    {
-      throw new FileNotFoundException(nameof(delimitedFile));
-    }
-
-    var column = delimitedFileOptions.Column;
-    if (column < 1)
-    {
-      throw new ArgumentException($"'{nameof(column)}' cannot be less than 1");
-    }
+    return delimitedResult;
   }
 
   private static (LineStatus, string) LineValidation(DelimitedFileLine delimitedFileLine, int fieldIndex)

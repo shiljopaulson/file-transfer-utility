@@ -12,21 +12,5 @@ public abstract class BaseCommand<TParsedOption, TResult>(string name, string? d
   internal TParsedOption? ParsedOptions { get; set; }
   internal TResult? Result { get; set; }
 
-  public abstract Command Create();
-
-  public async Task<int> Execute(ParseResult parseResult, CancellationToken cancellationToken)
-  {
-    Console.WriteLine("Execute");
-    Quiet = parseResult.GetValue<bool>(OptionNames.Quiet);
-    OutputFormat = parseResult.GetValue<OutputFormat>(OptionNames.OutputFormat);
-    var exitCode = await Process(cancellationToken);
-    if (!Quiet)
-    {
-      Print(cancellationToken);
-    }
-    return exitCode;
-  }
-
-  internal abstract Task<int> Process(CancellationToken cancellationToken);
-  internal abstract void Print(CancellationToken cancellationToken);
+  public abstract Command Build();
 }

@@ -2,7 +2,7 @@ using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Cli.Extensions;
 
-public static class DelimitedFileExtensions
+public static class DelimitedExtensions
 {
 
   public static bool IsAllLinesProcessed(this DelimitedFile delimitedFile)

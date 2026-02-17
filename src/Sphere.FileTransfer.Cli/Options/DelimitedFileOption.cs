@@ -3,9 +3,9 @@ using Sphere.FileTransfer.Cli.Constants;
 
 namespace Sphere.FileTransfer.Cli.Options;
 
-public sealed class DelimitedFileOption : Option<FileInfo>
+public sealed class FileOption : Option<FileInfo>
 {
-  public DelimitedFileOption() : base(OptionNames.DelimitedFile, OptionNames.DelimitedFileAlias)
+  public FileOption() : base(OptionNames.File, OptionNames.FileAlias)
   {
     Description = $"Delimited file (Refer {OptionNames.Delimiter} for supported delimiters).";
     Arity = ArgumentArity.ExactlyOne;

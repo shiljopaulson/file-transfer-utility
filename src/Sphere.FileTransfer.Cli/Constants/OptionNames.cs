@@ -20,8 +20,8 @@ internal sealed class OptionNames
   public const string Quiet = "--quiet";
 
   // Delimited Command options
-  public const string DelimitedFile = "--delimited-file";
-  public const string DelimitedFileAlias = "-df";
+  public const string File = "--file";
+  public const string FileAlias = "-f";
   public const string Column = "--column";
   public const string ColumnAlias = "-c";
   public const string NoHeader = "--no-header";

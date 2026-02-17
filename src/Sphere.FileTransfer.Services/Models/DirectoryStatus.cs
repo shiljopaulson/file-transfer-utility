@@ -1,10 +1,10 @@
 namespace Sphere.FileTransfer.Services.Models;
 
-public enum FileStatus
+public enum DirectoryStatus
 {
   Unprocessed,
   Processed,
   Canceled,
   Error,
-  Duplicate
+  NoMatchingFiles
 }

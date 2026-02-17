@@ -3,12 +3,12 @@ using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Services.Readers;
 
-public interface IDelimitedFileReader
+public interface IDelimitedReader
 {
   DelimitedFile Read(string fileFullName, char delimiter, bool hasHeader, CancellationToken cancellationToken);
 }
 
-public sealed class DelimitedFileReader : IDelimitedFileReader
+public sealed class DelimitedReader : IDelimitedReader
 {
   public DelimitedFile Read(string fileFullName, char delimiter, bool hasHeader, CancellationToken cancellationToken)
   {
@@ -20,10 +20,10 @@ public sealed class DelimitedFileReader : IDelimitedFileReader
     var skipHeader = delimitedFile.HasHeader;
     try
     {
-      var lookUp = new Dictionary<string, int>();
       string line;
 
       using StreamReader streamReader = new(delimitedFile.FileFullName, true);
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
       while ((line = streamReader.ReadLine()) != null)
       {
         cancellationToken.ThrowIfCancellationRequested();
@@ -48,6 +48,7 @@ public sealed class DelimitedFileReader : IDelimitedFileReader
         }
         lines.Add(delimitedFileLine);
       }
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
     }
     catch (OperationCanceledException operationCanceledException)
     {

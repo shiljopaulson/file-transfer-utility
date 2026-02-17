@@ -72,5 +72,4 @@ public abstract class BaseFileService
       return (FileStatus.Error, exception.Message);
     }
   }
-
 }

@@ -1,6 +1,6 @@
 using System.CommandLine;
-using Sphere.FileTransfer.Cli.Constants;
 using Sphere.FileTransfer.Cli.Extensions;
+using Sphere.FileTransfer.Cli.Handlers;
 using Sphere.FileTransfer.Cli.Models;
 using Sphere.FileTransfer.Cli.Options;
 using Sphere.FileTransfer.Models;
@@ -10,11 +10,13 @@ namespace Sphere.FileTransfer.Cli.Commands;
 
 public sealed class PatternCommand : BaseCommand<PatternOptions, SegregatedDirectory[]>
 {
-  public PatternCommand() : base("pattern", "Copies or Movies files based on the search patterns (Example: *.png, *.txt, *.*)")
+  private readonly PatternHandler _patternHandler;
+  public PatternCommand(PatternHandler patternHandler) : base("pattern", "Copies or Movies files based on the search patterns (Example: *.png, *.txt, *.*)")
   {
+    _patternHandler = patternHandler;
   }
 
-  public override Command Create()
+  public override Command Build()
   {
     Options.Add(new SourcesOption());
     Options.Add(new DestinationOption());
@@ -25,34 +27,16 @@ public sealed class PatternCommand : BaseCommand<PatternOptions, SegregatedDirec
     Options.Add(new DryRunOption());
     Options.Add(new QuietOption());
 
-    SetAction(Invoke());
+    SetAction(_patternHandler.Handle);
     return this;
   }
 
-  private Func<ParseResult, CancellationToken, Task<int>> Invoke()
-  {
-    return async (parseResult, cancellationToken) =>
-    {
-      cancellationToken.ThrowIfCancellationRequested();
-      if (parseResult.GetValue<bool>(OptionNames.Help))
-      {
-        Parse(OptionNames.Help).Invoke();
-        return ExitCodes.Success;
-      }
-
-      ParsedOptions = Mappers.MapToPatternOptions(parseResult);
-      return await Execute(parseResult, cancellationToken);
-    };
-  }
-
-  internal override async Task<int> Process(CancellationToken cancellationToken)
+  internal async Task<int> Process(CancellationToken cancellationToken)
   {
     if (ParsedOptions is null)
     {
       return ExitCodes.Error;
     }
-    //service.Process(cancellationToken);
-    //Result = service.Result;
 
     if (Result is null || Result.Length == 0)
     {
@@ -76,26 +60,28 @@ public sealed class PatternCommand : BaseCommand<PatternOptions, SegregatedDirec
     }
   }
 
-  internal override void Print(CancellationToken cancellationToken)
+  internal void Print(CancellationToken cancellationToken)
   {
+    cancellationToken.ThrowIfCancellationRequested();
     if (ParsedOptions is null
       || Result is null
       || Result.Length == 0)
     {
       return;
     }
-    if (OutputFormat == OutputFormat.JSON)
+    if (OutputFormat == OutputFormat.Json)
     {
       Console.WriteLine(Utility.ToJson(Result));
     }
     else
     {
-      ConsoleText();
+      ConsoleText(cancellationToken);
     }
   }
 
-  private void ConsoleText()
+  private void ConsoleText(CancellationToken cancellationToken)
   {
+    cancellationToken.ThrowIfCancellationRequested();
     if (Result is null)
     {
       return;

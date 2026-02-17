@@ -27,23 +27,6 @@ public sealed class DestinationOption : Option<DirectoryInfo>
       {
         result.AddError($"Option '{Name}' provided directory doesn't exist or lacks permission to access");
       }
-      /* else if (directoryInfo.Exists)
-      {
-        var sources = result.GetValue<DirectoryInfo[]>(OptionNames.Sources);
-        if (sources is null || sources.Length == 0)
-        {
-          return;
-        }
-        var destinationFullName = directoryInfo.FullName.TrimEnd(Path.DirectorySeparatorChar);
-        for (var i = 0; i < sources.Length; i++)
-        {
-          var sourceFullName = sources[i].FullName.TrimEnd(Path.DirectorySeparatorChar);
-          if (sourceFullName == destinationFullName)
-          {
-            result.AddError($"Option '{OptionNames.Sources}' of [{i}] & Option '{Name}' cannot be same directory location");
-          }
-        }
-      } */
     });
   }
 }
