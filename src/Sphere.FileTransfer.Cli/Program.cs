@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Templates;
 using Serilog.Settings.Configuration;
 using Sphere.FileTransfer.Cli.Commands;
 using Sphere.FileTransfer.Cli.Handlers;
@@ -22,7 +21,7 @@ namespace Sphere.FileTransfer.Cli;
 class Program
 {
     private const string APP_NAME = "Sphere.FileTransfer.Cli";
-    private const string APP_SETTINGS_FILE = "appsettings.json";
+    private const string APP_SETTINGS_FILE = "ftu.appsettings.json";
 
     async static Task<int> Main(string[] args)
     {
@@ -41,19 +40,17 @@ class Program
             var logger = host.Services.GetRequiredService<ILogger<Program>>();
             var rootCommand = cliBuilder.Build();
 
-            Log.Information("{APP_NAME} starting up", APP_NAME);
+            Log.Information("Starting {0} at {1}", APP_NAME, DateTime.Now.ToString());
             return await rootCommand.Parse(args).InvokeAsync();
         }
         catch (OperationCanceledException)
         {
-            Console.WriteLine("Operation canceled.");
+            Utility.WriteLine("Operation canceled.", ConsoleColor.Cyan);
             exitCode = ExitCodes.Canceled;
         }
         catch (Exception ex)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Error.WriteLine($"Unexpected error: {ex.Message}");
-            Console.ResetColor();
+            Utility.WriteLine($"Unexpected error: {ex.Message}", ConsoleColor.Red);
             Log.Error("Exception {ex.Message}", ex.Message);
             return ExitCodes.Error;
         }
@@ -67,14 +64,19 @@ class Program
 
     static IHost CreateHost(string[] args)
     {
-        var options = new ConfigurationReaderOptions(
-            typeof(ConsoleLoggerConfigurationExtensions).Assembly
+        var readerOptions = new ConfigurationReaderOptions(
+            typeof(Serilog.ConsoleLoggerConfigurationExtensions).Assembly,
+            typeof(Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme).Assembly, // Serilog.Sinks.Console
+            typeof(Serilog.Sinks.File.FileSink).Assembly // Serilog.Sinks.File
         );
         IConfiguration configuration = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile(APP_SETTINGS_FILE, optional: false, reloadOnChange: true)
             .AddEnvironmentVariables()
             .Build();
+        Log.Logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(configuration, readerOptions)
+            .CreateLogger();
         var applicationBuilder = Host.CreateApplicationBuilder();
         applicationBuilder.Environment.ApplicationName = APP_NAME;
         applicationBuilder.Services.AddLogging(builder =>
@@ -83,9 +85,6 @@ class Program
             builder.AddConfiguration(configuration);
             builder.AddSerilog(Log.Logger, dispose: true);
         });
-        Log.Logger = new LoggerConfiguration()
-            .ReadFrom.Configuration(configuration, options)
-            .CreateLogger();
 
         // Services
         applicationBuilder.Services.AddSingleton<IDelimitedService, DelimitedService>();
@@ -116,6 +115,7 @@ class Program
 
         // Result Writers
         applicationBuilder.Services.AddSingleton<IResultWriter<DelimitedFile>, DelimitedResultWriter>();
+        applicationBuilder.Services.AddSingleton<IResultWriter<SegregatedDirectory[]>, PatternResultWriter>();
 
         // Root CLI builder
         applicationBuilder.Services.AddSingleton<CliBuilder>();

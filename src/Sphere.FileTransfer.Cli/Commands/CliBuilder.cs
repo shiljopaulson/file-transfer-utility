@@ -34,7 +34,7 @@ public sealed class CliBuilder
   {
     _logger.LogTrace("Entering CliBuilder => Build");
     var delimiters = Enum.GetNames<Delimiter>().Select(x => x.ToLowerInvariant());
-    var rootDescription = $"A data driven file transfer utility which copies or moves files from one or multiple source directories to the destination directory based on the `delimited file` ({string.Join(",", delimiters)}) or directory `search pattern` (Example: *.png, *.*).";
+    var rootDescription = $"A data driven file transfer utility which copies or moves files from one or multiple source directories to the destination directory based on the `delimited file` ({string.Join(" / ", delimiters)} files) or directory `search pattern` (Example: *.png, *.*).";
 
     var rootCommand = new RootCommand(rootDescription);
     rootCommand.Subcommands.Add(_delimitedCommand.Build());

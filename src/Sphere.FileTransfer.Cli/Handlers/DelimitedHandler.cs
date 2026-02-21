@@ -42,7 +42,7 @@ public class DelimitedHandler : BaseHandler<DelimitedOptions, DelimitedFile>, IC
     Result = await _service.Process(ParsedOptions, cancellationToken);
     var exitCode = GetExitCode();
     Result.Status = GetFileStatus(exitCode);
-    _resultWriter.Write(Result, Models.OutputFormat.Text, cancellationToken);
+    _resultWriter.Write(Result, OutputFormat, cancellationToken);
     return exitCode;
   }
 

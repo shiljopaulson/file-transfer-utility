@@ -1,5 +1,6 @@
 {
   "Serilog": {
+    "Using": ["Serilog.Sinks.Console", "Serilog.Sinks.File"],
     "MinimumLevel": {
       "Default": "Error",
       "Override": {
@@ -17,7 +18,7 @@
       {
         "Name": "File",
         "Args": {
-          "path": "logs/Sphere.FileTransfer.Cli.log",
+          "path": "./logs/ftu.log",
           "rollingInterval": "Day",
           "retainedFileCountLimit": 7,
           "outputTemplate": "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"

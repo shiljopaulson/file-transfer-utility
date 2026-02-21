@@ -15,24 +15,25 @@ public sealed class DelimitedResultWriter : IResultWriter<DelimitedFile>
   public void Write(DelimitedFile result, OutputFormat format, CancellationToken cancellationToken)
   {
     cancellationToken.ThrowIfCancellationRequested();
-    switch (format)
-    {
-      case OutputFormat.Json:
-        WriteJson(result);
-        break;
-      case OutputFormat.Text:
-      default:
-        WriteText(result);
-        break;
-    }
-  }
-
-  private void WriteText(DelimitedFile result)
-  {
     if (result is null)
     {
       return;
     }
+    switch (format)
+    {
+      case OutputFormat.Json:
+        WriteJson(result, cancellationToken);
+        break;
+      case OutputFormat.Text:
+      default:
+        WriteText(result, cancellationToken);
+        break;
+    }
+  }
+
+  private void WriteText(DelimitedFile result, CancellationToken cancellationToken)
+  {
+    cancellationToken.ThrowIfCancellationRequested();
     var rows = 0;
     if (result.Lines is not null && result.Lines.Length > 0)
     {
@@ -52,7 +53,6 @@ public sealed class DelimitedResultWriter : IResultWriter<DelimitedFile>
     Console.WriteLine($"{padding}{padding}Lines     : {(result.HasHeader && result.Lines is not null ? result.Lines.Length - 1 : result.Lines?.Length)}");
     Console.WriteLine();
     Console.WriteLine($"{padding}{repeatedString}");
-
     Console.WriteLine();
 
     if (result.Lines is null
@@ -86,6 +86,9 @@ public sealed class DelimitedResultWriter : IResultWriter<DelimitedFile>
     Console.WriteLine();
   }
 
-  private static void WriteJson(DelimitedFile result) =>
-      Console.WriteLine(JsonSerializer.Serialize(result));
+  private static void WriteJson(DelimitedFile result, CancellationToken cancellationToken)
+  {
+    cancellationToken.ThrowIfCancellationRequested();
+    Console.WriteLine(JsonSerializer.Serialize(result));
+  }
 }

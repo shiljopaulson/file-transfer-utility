@@ -7,4 +7,9 @@ public class DelimitedFileLine
   public string[] DelimitedFields { get; set; } = [];
   public LineStatus Status { get; set; } = LineStatus.Unprocessed;
   public string? Message { get; set; }
+
+  public override string ToString()
+  {
+    return $"Number:{Number}, Data: {Data}, Status:{Status}, Message:{Message}";
+  }
 }

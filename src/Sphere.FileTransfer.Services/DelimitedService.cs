@@ -30,7 +30,8 @@ public class DelimitedService : BaseFileService<DelimitedService>, IDelimitedSer
     var validationResult = await _delimitedOptionsValidator.ValidateAsync(delimitedOptions, cancellationToken);
     if (!validationResult.IsValid)
     {
-      var errors = validationResult.Errors;
+      _logger.LogError("Validation failed at {0}", string.Join(",", validationResult.Errors));
+      return new DelimitedFile { FileFullName = delimitedOptions.File.FullName, Status = FileStatus.Error };
     }
     var sources = delimitedOptions.Sources;
     var destination = delimitedOptions.Destination;
@@ -143,7 +144,7 @@ public class DelimitedService : BaseFileService<DelimitedService>, IDelimitedSer
     return delimitedResult;
   }
 
-  private static (LineStatus, string) LineValidation(DelimitedFileLine delimitedFileLine, int fieldIndex)
+  private (LineStatus, string) LineValidation(DelimitedFileLine delimitedFileLine, int fieldIndex)
   {
     if (delimitedFileLine is null)
     {
@@ -162,7 +163,7 @@ public class DelimitedService : BaseFileService<DelimitedService>, IDelimitedSer
     {
       return (LineStatus.Error, $"Has less number of columns than expected column number '{fieldIndex + 1}'.");
     }
-    if (string.IsNullOrWhiteSpace(delimitedFileLine.DelimitedFields[fieldIndex].Trim()))
+    else if (string.IsNullOrWhiteSpace(delimitedFileLine.DelimitedFields[fieldIndex].Trim()))
     {
       return (LineStatus.Error, "File name missing.");
     }

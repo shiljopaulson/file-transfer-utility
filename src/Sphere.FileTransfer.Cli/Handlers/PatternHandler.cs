@@ -3,7 +3,9 @@ using System.CommandLine.Help;
 using Microsoft.Extensions.Logging;
 using Sphere.FileTransfer.Cli.Commands;
 using Sphere.FileTransfer.Cli.Constants;
+using Sphere.FileTransfer.Cli.Extensions;
 using Sphere.FileTransfer.Cli.Mappers;
+using Sphere.FileTransfer.Cli.Writer;
 using Sphere.FileTransfer.Models;
 using Sphere.FileTransfer.Services;
 using Sphere.FileTransfer.Services.Models;
@@ -14,12 +16,14 @@ public class PatternHandler : BaseHandler<PatternOptions, SegregatedDirectory[]>
 {
   private readonly IPatternService _service;
   private readonly IOptionsMapper<PatternOptions> _optionsMapper;
+  private readonly IResultWriter<SegregatedDirectory[]> _resultWriter;
   private readonly ILogger<PatternCommand> _logger;
 
-  public PatternHandler(IPatternService service, IOptionsMapper<PatternOptions> optionsMapper, ILogger<PatternCommand> logger)
+  public PatternHandler(IPatternService service, IOptionsMapper<PatternOptions> optionsMapper, IResultWriter<SegregatedDirectory[]> resultWriter, ILogger<PatternCommand> logger)
   {
     _service = service;
     _optionsMapper = optionsMapper;
+    _resultWriter = resultWriter;
     _logger = logger;
   }
 
@@ -33,8 +37,39 @@ public class PatternHandler : BaseHandler<PatternOptions, SegregatedDirectory[]>
       helpAction.Invoke(parseResult);
       return ExitCodes.Success;
     }
+    ParseDefaultOptions(parseResult);
     ParsedOptions = _optionsMapper.Map(parseResult);
-    var exitCode = await _service.Process(ParsedOptions, cancellationToken);
+    Result = await _service.Process(ParsedOptions, cancellationToken);
+    var exitCode = GetExitCode();
+    _resultWriter.Write(Result, OutputFormat, cancellationToken);
     return ExitCodes.Success;
+  }
+
+  private int GetExitCode()
+  {
+    if (ParsedOptions is null)
+    {
+      return ExitCodes.Error;
+    }
+    if (Result is null || Result.Length == 0)
+    {
+      return ExitCodes.Error;
+    }
+    else if (ParsedOptions.DryRun)
+    {
+      return ExitCodes.Success;
+    }
+    else if (Result.IsAllFilesProcessed())
+    {
+      return ExitCodes.Success;
+    }
+    else if (Result.HasAnyFilesProcessed())
+    {
+      return ExitCodes.PartialSuccess;
+    }
+    else
+    {
+      return ExitCodes.Error;
+    }
   }
 }

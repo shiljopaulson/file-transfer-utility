@@ -17,7 +17,7 @@ public sealed class DelimitedCommand : BaseCommand<DelimitedOptions, DelimitedFi
   static DelimitedCommand()
   {
     var delimiters = Enum.GetNames<Delimiter>().Select(x => x.ToLowerInvariant());
-    _description = $"Copies or Movies files based on the entries found in the delimited file ({string.Join(",", delimiters)})";
+    _description = $"Copies or Movies files based on the file name entries found in the delimited file ({string.Join(" / ", delimiters)} files)";
   }
 
   public DelimitedCommand(DelimitedHandler delimitedHandler, ILogger<DelimitedCommand> logger, string name = "delimited") : base(name, "")
