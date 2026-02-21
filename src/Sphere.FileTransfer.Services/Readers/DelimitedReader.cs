@@ -1,4 +1,5 @@
 using System.Security;
+using Microsoft.Extensions.Logging;
 using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Services.Readers;
@@ -10,9 +11,15 @@ public interface IDelimitedReader
 
 public sealed class DelimitedReader : IDelimitedReader
 {
+  private readonly ILogger<DelimitedReader> _logger;
+  public DelimitedReader(ILogger<DelimitedReader> logger)
+  {
+    _logger = logger;
+  }
+
   public DelimitedFile Read(string fileFullName, char delimiter, bool hasHeader, CancellationToken cancellationToken)
   {
-    Console.WriteLine("Readers.Read");
+    _logger.LogTrace("Entering IDelimitedReader => Read");
     cancellationToken.ThrowIfCancellationRequested();
     var delimitedFile = new DelimitedFile { FileFullName = fileFullName, Delimiter = delimiter, HasHeader = hasHeader };
     var lines = new List<DelimitedFileLine>();
@@ -50,63 +57,75 @@ public sealed class DelimitedReader : IDelimitedReader
       }
 #pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
     }
-    catch (OperationCanceledException operationCanceledException)
+    catch (OperationCanceledException exception)
     {
+      _logger.LogError(exception.Message);
       delimitedFile.Status = FileStatus.Canceled;
-      delimitedFile.Message = $"{nameof(OperationCanceledException)} while reading line number {lineNumber}, {operationCanceledException.Message}";
+      delimitedFile.Message = $"{nameof(OperationCanceledException)} while reading line number {lineNumber}, {exception.Message}";
     }
-    catch (PathTooLongException pathTooLongException)
+    catch (PathTooLongException exception)
     {
+      _logger.LogError(exception.Message);
       delimitedFile.Status = FileStatus.Error;
-      delimitedFile.Message = pathTooLongException.Message;
+      delimitedFile.Message = exception.Message;
     }
-    catch (DirectoryNotFoundException directoryNotFoundException)
+    catch (DirectoryNotFoundException exception)
     {
+      _logger.LogError(exception.Message);
       delimitedFile.Status = FileStatus.Error;
-      delimitedFile.Message = $"{nameof(DirectoryNotFoundException)} while reading line number {lineNumber}, {directoryNotFoundException.Message}";
+      delimitedFile.Message = $"{nameof(DirectoryNotFoundException)} while reading line number {lineNumber}, {exception.Message}";
     }
-    catch (FileNotFoundException fileNotFoundException)
+    catch (FileNotFoundException exception)
     {
+      _logger.LogError(exception.Message);
       delimitedFile.Status = FileStatus.Error;
-      delimitedFile.Message = $"{nameof(FileNotFoundException)} while reading line number {lineNumber}, {fileNotFoundException.Message}";
+      delimitedFile.Message = $"{nameof(FileNotFoundException)} while reading line number {lineNumber}, {exception.Message}";
     }
-    catch (IOException ioException)
+    catch (IOException exception)
     {
+      _logger.LogError(exception.Message);
       delimitedFile.Status = FileStatus.Error;
-      delimitedFile.Message = $"{nameof(IOException)} while reading line number {lineNumber}, {ioException.Message}";
+      delimitedFile.Message = $"{nameof(IOException)} while reading line number {lineNumber}, {exception.Message}";
     }
-    catch (OutOfMemoryException outOfMemoryException)
+    catch (OutOfMemoryException exception)
     {
+      _logger.LogError(exception.Message);
       delimitedFile.Status = FileStatus.Error;
-      delimitedFile.Message = $"{nameof(OutOfMemoryException)} while reading line number {lineNumber}, {outOfMemoryException.Message}";
+      delimitedFile.Message = $"{nameof(OutOfMemoryException)} while reading line number {lineNumber}, {exception.Message}";
     }
-    catch (ArgumentNullException argumentNullException)
+    catch (ArgumentNullException exception)
     {
+      _logger.LogError(exception.Message);
       delimitedFile.Status = FileStatus.Error;
-      delimitedFile.Message = argumentNullException.Message;
+      delimitedFile.Message = exception.Message;
     }
-    catch (ArgumentException argumentException)
+    catch (ArgumentException exception)
     {
+      _logger.LogError(exception.Message);
       delimitedFile.Status = FileStatus.Error;
-      delimitedFile.Message = argumentException.Message;
+      delimitedFile.Message = exception.Message;
     }
-    catch (UnauthorizedAccessException unauthorizedAccessException)
+    catch (UnauthorizedAccessException exception)
     {
+      _logger.LogError(exception.Message);
       delimitedFile.Status = FileStatus.Error;
-      delimitedFile.Message = $"{nameof(UnauthorizedAccessException)} while reading line number {lineNumber}, {unauthorizedAccessException.Message}";
+      delimitedFile.Message = $"{nameof(UnauthorizedAccessException)} while reading line number {lineNumber}, {exception.Message}";
     }
-    catch (NotSupportedException notSupportedException)
+    catch (NotSupportedException exception)
     {
+      _logger.LogError(exception.Message);
       delimitedFile.Status = FileStatus.Error;
-      delimitedFile.Message = $"{nameof(NotSupportedException)} while reading line number {lineNumber}, {notSupportedException.Message}";
+      delimitedFile.Message = $"{nameof(NotSupportedException)} while reading line number {lineNumber}, {exception.Message}";
     }
-    catch (SecurityException securityException)
+    catch (SecurityException exception)
     {
+      _logger.LogError(exception.Message);
       delimitedFile.Status = FileStatus.Error;
-      delimitedFile.Message = $"{nameof(SecurityException)} while reading line number {lineNumber}, {securityException.Message}";
+      delimitedFile.Message = $"{nameof(SecurityException)} while reading line number {lineNumber}, {exception.Message}";
     }
     catch (Exception exception)
     {
+      _logger.LogError(exception.Message);
       delimitedFile.Status = FileStatus.Error;
       delimitedFile.Message = exception.Message;
     }

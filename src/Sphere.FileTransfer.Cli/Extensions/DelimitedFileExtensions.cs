@@ -24,4 +24,14 @@ public static class DelimitedExtensions
       x.Status == LineStatus.Processed
       || x.Status == LineStatus.Skipped);
   }
+
+  public static bool HasAnyLinesCanceled(this DelimitedFile delimitedFile)
+  {
+    if (delimitedFile.Lines is null || delimitedFile.Lines.Length == 0)
+    {
+      return false;
+    }
+    return delimitedFile.Lines.Any(x =>
+      x.Status == LineStatus.Canceled);
+  }
 }

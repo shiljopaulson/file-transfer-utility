@@ -13,13 +13,20 @@
 
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.3" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
+    <PackageReference Include="Serilog.Extensions" Version="10.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="System.CommandLine" Version="2.0.3" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Commands/" />
+    <Folder Include="Configurations/" />
     <Folder Include="Constants/" />
     <Folder Include="Extensions/" />
     <Folder Include="Handlers/" />
@@ -32,6 +39,12 @@
   <ItemGroup>
     <ProjectReference Include="../Sphere.FileTransfer.Models/Sphere.FileTransfer.Models.csproj" />
     <ProjectReference Include="../Sphere.FileTransfer.Services/Sphere.FileTransfer.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

@@ -1,13 +1,20 @@
 using System.Text.Json;
+using Sphere.FileTransfer.Cli.Mappers;
 using Sphere.FileTransfer.Cli.Models;
 using Sphere.FileTransfer.Services.Models;
 
-namespace Sphere.FileTransfer.Cli.Results;
+namespace Sphere.FileTransfer.Cli.Writer;
 
 public sealed class DelimitedResultWriter : IResultWriter<DelimitedFile>
 {
+  private readonly IMap<char, Delimiter> _charToDelimiterMapper;
+  public DelimitedResultWriter(IMap<char, Delimiter> charToDelimiterMapper)
+  {
+    _charToDelimiterMapper = charToDelimiterMapper;
+  }
   public void Write(DelimitedFile result, OutputFormat format, CancellationToken cancellationToken)
   {
+    cancellationToken.ThrowIfCancellationRequested();
     switch (format)
     {
       case OutputFormat.Json:
@@ -34,16 +41,17 @@ public sealed class DelimitedResultWriter : IResultWriter<DelimitedFile>
         : result.Lines.Length;
     }
     int terminalWidth = Console.WindowWidth;
-    string repeatedString = new string('─', terminalWidth - 4);
-    string spaceBetween = "  ";
+    int spacing = 4;
+    string repeatedString = new('─', terminalWidth - spacing);
+    string padding = new(' ', spacing / 2);
     Console.WriteLine();
-    Console.WriteLine($"{spaceBetween}{repeatedString}");
+    Console.WriteLine($"{padding}{repeatedString}");
     Console.WriteLine();
-    Console.WriteLine($"{spaceBetween}File      : {result.FileFullName}");
-    Console.WriteLine($"{spaceBetween}Delimiter : '{result.Delimiter}'");
-    Console.WriteLine($"{spaceBetween}Lines     : {(result.HasHeader && result.Lines is not null ? result.Lines.Length - 1 : result.Lines?.Length)}");
+    Console.WriteLine($"{padding}{padding}File      : {result.FileFullName}");
+    Console.WriteLine($"{padding}{padding}Delimiter : '{result.Delimiter}'({_charToDelimiterMapper.Map(result.Delimiter)})");
+    Console.WriteLine($"{padding}{padding}Lines     : {(result.HasHeader && result.Lines is not null ? result.Lines.Length - 1 : result.Lines?.Length)}");
     Console.WriteLine();
-    Console.WriteLine($"{spaceBetween}{repeatedString}");
+    Console.WriteLine($"{padding}{repeatedString}");
 
     Console.WriteLine();
 

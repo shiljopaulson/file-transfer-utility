@@ -7,6 +7,11 @@ namespace Sphere.FileTransfer.Cli.Mappers;
 
 public class DelimitedOptionsMapper : IOptionsMapper<DelimitedOptions>
 {
+  private readonly IMap<Delimiter, char> _delimiterToCharMapper;
+  public DelimitedOptionsMapper(IMap<Delimiter, char> delimiterToCharMapper)
+  {
+    _delimiterToCharMapper = delimiterToCharMapper;
+  }
   public DelimitedOptions Map(ParseResult parseResult)
   {
     var delimiter = parseResult.GetValue<Delimiter>(OptionNames.Delimiter);
@@ -21,18 +26,8 @@ public class DelimitedOptionsMapper : IOptionsMapper<DelimitedOptions>
       parseResult.GetValue<FileInfo>(OptionNames.File),
       parseResult.GetValue<byte>(OptionNames.Column),
       parseResult.GetValue<bool>(OptionNames.NoHeader),
-      Map(delimiter));
+      _delimiterToCharMapper.Map(delimiter));
 #pragma warning restore CS8604 // Possible null reference argument.
     return delimitedOptions;
-  }
-
-  private static char Map(Delimiter delimiter)
-  {
-    return delimiter switch
-    {
-      Delimiter.Tab => '\t',
-      Delimiter.Pipe => '|',
-      _ => ',',
-    };
   }
 }

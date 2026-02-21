@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using Sphere.FileTransfer.Models;
 using Sphere.FileTransfer.Services.Models;
 using Sphere.FileTransfer.Services.Readers;
@@ -10,12 +11,12 @@ public interface IPatternService
   Task<SegregatedDirectory[]> Process(PatternOptions patternOptions, CancellationToken cancellationToken);
 }
 
-public class PatternService : BaseFileService, IPatternService
+public class PatternService : BaseFileService<PatternService>, IPatternService
 {
   private readonly IDirectoryReader _directoryFileReader;
   private readonly AbstractValidator<PatternOptions> _patternOptionsValidator;
 
-  public PatternService(IDirectoryReader directoryFileReader, AbstractValidator<PatternOptions> patternOptionsValidator)
+  public PatternService(IDirectoryReader directoryFileReader, AbstractValidator<PatternOptions> patternOptionsValidator, ILogger<PatternService> logger) : base(logger)
   {
     _directoryFileReader = directoryFileReader;
     _patternOptionsValidator = patternOptionsValidator;

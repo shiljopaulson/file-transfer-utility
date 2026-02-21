@@ -1,6 +1,6 @@
 using Sphere.FileTransfer.Cli.Models;
 
-namespace Sphere.FileTransfer.Cli.Results;
+namespace Sphere.FileTransfer.Cli.Writer;
 
 /// <summary>
 /// Renders a result of type <typeparamref name="T"/> to stdout

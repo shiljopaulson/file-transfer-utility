@@ -1,9 +1,10 @@
 using System.CommandLine;
 using System.CommandLine.Help;
+using Microsoft.Extensions.Logging;
 using Sphere.FileTransfer.Cli.Constants;
 using Sphere.FileTransfer.Cli.Extensions;
 using Sphere.FileTransfer.Cli.Mappers;
-using Sphere.FileTransfer.Cli.Results;
+using Sphere.FileTransfer.Cli.Writer;
 using Sphere.FileTransfer.Models;
 using Sphere.FileTransfer.Services;
 using Sphere.FileTransfer.Services.Models;
@@ -15,19 +16,23 @@ public class DelimitedHandler : BaseHandler<DelimitedOptions, DelimitedFile>, IC
   private readonly IDelimitedService _service;
   private readonly IOptionsMapper<DelimitedOptions> _optionsMapper;
   private readonly IResultWriter<DelimitedFile> _resultWriter;
+  private readonly ILogger<DelimitedHandler> _logger;
 
-  public DelimitedHandler(IDelimitedService delimitedService, IOptionsMapper<DelimitedOptions> optionsMapper, IResultWriter<DelimitedFile> resultWriter)
+  public DelimitedHandler(IDelimitedService delimitedService, IOptionsMapper<DelimitedOptions> optionsMapper, IResultWriter<DelimitedFile> resultWriter, ILogger<DelimitedHandler> logger)
   {
     _service = delimitedService;
     _optionsMapper = optionsMapper;
     _resultWriter = resultWriter;
+    _logger = logger;
   }
 
   public async Task<int> Handle(ParseResult parseResult, CancellationToken cancellationToken)
   {
+    _logger.LogTrace("Entering DelimitedHandler => Handle");
     cancellationToken.ThrowIfCancellationRequested();
     if (parseResult.GetValue<bool>(OptionNames.Help))
     {
+      _logger.LogTrace("Invoking Help");
       var helpAction = new HelpAction();
       helpAction.Invoke(parseResult);
       return ExitCodes.Success;
@@ -51,6 +56,10 @@ public class DelimitedHandler : BaseHandler<DelimitedOptions, DelimitedFile>, IC
     {
       return ExitCodes.Error;
     }
+    else if (Result.HasAnyLinesCanceled())
+    {
+      return ExitCodes.Canceled;
+    }
     else if (ParsedOptions.DryRun || Result.IsAllLinesProcessed())
     {
       return ExitCodes.Success;
@@ -70,6 +79,7 @@ public class DelimitedHandler : BaseHandler<DelimitedOptions, DelimitedFile>, IC
     return exitCode switch
     {
       ExitCodes.Success or ExitCodes.PartialSuccess => FileStatus.Processed,
+      ExitCodes.Canceled => FileStatus.Canceled,
       _ => FileStatus.Error,
     };
   }

@@ -1,5 +1,6 @@
 using System.CommandLine;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Sphere.FileTransfer.Cli.Constants;
 
 namespace Sphere.FileTransfer.Cli.Handlers;
@@ -11,8 +12,15 @@ public interface ICommandHandler
 
 public class RootHandler : ICommandHandler
 {
+  private readonly ILogger<RootHandler> _logger;
+  public RootHandler(ILogger<RootHandler> logger)
+  {
+    _logger = logger;
+  }
+
   public async Task<int> Handle(ParseResult parseResult, CancellationToken cancellationToken)
   {
+    _logger.LogTrace("Entering RootHandler => Handle");
     cancellationToken.ThrowIfCancellationRequested();
     if (parseResult.GetValue<bool>(OptionNames.Info))
     {

@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using Sphere.FileTransfer.Models;
 using Sphere.FileTransfer.Services.Models;
 using Sphere.FileTransfer.Services.Readers;
@@ -10,12 +11,12 @@ public interface IDelimitedService
   Task<DelimitedFile> Process(DelimitedOptions delimitedOptions, CancellationToken cancellationToken);
 }
 
-public class DelimitedService : BaseFileService, IDelimitedService
+public class DelimitedService : BaseFileService<DelimitedService>, IDelimitedService
 {
   private readonly IDelimitedReader _delimitedReader;
   private readonly AbstractValidator<DelimitedOptions> _delimitedOptionsValidator;
 
-  public DelimitedService(IDelimitedReader delimitedReader, AbstractValidator<DelimitedOptions> delimitedOptionsValidator)
+  public DelimitedService(IDelimitedReader delimitedReader, AbstractValidator<DelimitedOptions> delimitedOptionsValidator, ILogger<DelimitedService> logger) : base(logger)
   {
     _delimitedReader = delimitedReader;
     _delimitedOptionsValidator = delimitedOptionsValidator;
@@ -23,7 +24,7 @@ public class DelimitedService : BaseFileService, IDelimitedService
 
   public async Task<DelimitedFile> Process(DelimitedOptions delimitedOptions, CancellationToken cancellationToken)
   {
-    Console.WriteLine("Services.Process");
+    _logger.LogTrace("Entering IDelimitedService => Process");
     cancellationToken.ThrowIfCancellationRequested();
 
     var validationResult = await _delimitedOptionsValidator.ValidateAsync(delimitedOptions, cancellationToken);
@@ -51,7 +52,6 @@ public class DelimitedService : BaseFileService, IDelimitedService
     var uniqueFiles = new Dictionary<string, DetailedFileInfo[]>();
     for (var i = 0; i < delimitedResult.Lines.Length; i++)
     {
-      //Console.WriteLine($"{delimitedFileResult.Lines[i].Data}");
       cancellationToken.ThrowIfCancellationRequested();
 
       var (status, message) = LineValidation(delimitedResult.Lines[i], fieldIndex);
@@ -84,7 +84,6 @@ public class DelimitedService : BaseFileService, IDelimitedService
 
         var newEntry = DetailedFileInfo.GetStatusForSource(sourceFilePath, i);
         var hasEntries = uniqueFiles[fileName].Length > 0;
-        //Console.WriteLine($"hasEntries:{hasEntries} for fileName:{fileName}");
 
         uniqueFiles[fileName] = hasEntries
           ? [.. uniqueFiles[fileName], newEntry]

@@ -1,5 +1,7 @@
 using System.CommandLine;
 using System.CommandLine.Help;
+using Microsoft.Extensions.Logging;
+using Sphere.FileTransfer.Cli.Commands;
 using Sphere.FileTransfer.Cli.Constants;
 using Sphere.FileTransfer.Cli.Mappers;
 using Sphere.FileTransfer.Models;
@@ -12,15 +14,18 @@ public class PatternHandler : BaseHandler<PatternOptions, SegregatedDirectory[]>
 {
   private readonly IPatternService _service;
   private readonly IOptionsMapper<PatternOptions> _optionsMapper;
+  private readonly ILogger<PatternCommand> _logger;
 
-  public PatternHandler(IPatternService service, IOptionsMapper<PatternOptions> optionsMapper)
+  public PatternHandler(IPatternService service, IOptionsMapper<PatternOptions> optionsMapper, ILogger<PatternCommand> logger)
   {
     _service = service;
     _optionsMapper = optionsMapper;
+    _logger = logger;
   }
 
   public async Task<int> Handle(ParseResult parseResult, CancellationToken cancellationToken)
   {
+    _logger.LogTrace("Entering PatternHandler => Handle");
     cancellationToken.ThrowIfCancellationRequested();
     if (parseResult.GetValue<bool>(OptionNames.Help))
     {

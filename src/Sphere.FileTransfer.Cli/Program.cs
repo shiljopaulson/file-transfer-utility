@@ -1,22 +1,29 @@
-﻿using System.CommandLine;
+﻿using FluentValidation;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Templates;
+using Serilog.Settings.Configuration;
 using Sphere.FileTransfer.Cli.Commands;
 using Sphere.FileTransfer.Cli.Handlers;
+using Sphere.FileTransfer.Cli.Mappers;
+using Sphere.FileTransfer.Cli.Models;
+using Sphere.FileTransfer.Cli.Writer;
+using Sphere.FileTransfer.Models;
 using Sphere.FileTransfer.Services;
+using Sphere.FileTransfer.Services.Models;
 using Sphere.FileTransfer.Services.Readers;
 using Sphere.FileTransfer.Services.Validators;
-using FluentValidation;
-using Sphere.FileTransfer.Models;
-using Sphere.FileTransfer.Cli.Results;
-using Sphere.FileTransfer.Services.Models;
-using Sphere.FileTransfer.Cli.Mappers;
 
 namespace Sphere.FileTransfer.Cli;
 
 class Program
 {
+    private const string APP_NAME = "Sphere.FileTransfer.Cli";
+    private const string APP_SETTINGS_FILE = "appsettings.json";
+
     async static Task<int> Main(string[] args)
     {
         var exitCode = 0;
@@ -33,82 +40,86 @@ class Program
             var cliBuilder = host.Services.GetRequiredService<CliBuilder>();
             var logger = host.Services.GetRequiredService<ILogger<Program>>();
             var rootCommand = cliBuilder.Build();
+
+            Log.Information("{APP_NAME} starting up", APP_NAME);
             return await rootCommand.Parse(args).InvokeAsync();
         }
         catch (OperationCanceledException)
         {
             Console.WriteLine("Operation canceled.");
-            exitCode = 130;
+            exitCode = ExitCodes.Canceled;
         }
         catch (Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.WriteLine($"Unexpected error: {ex.Message}");
             Console.ResetColor();
-            return 1;
+            Log.Error("Exception {ex.Message}", ex.Message);
+            return ExitCodes.Error;
+        }
+        finally
+        {
+            Log.Information("Exiting with code {exitCode}", exitCode);
+            await Log.CloseAndFlushAsync();
         }
         return exitCode;
     }
 
-    static IHost CreateHost(string[] args) =>
-    Host.CreateDefaultBuilder(args)
-        // ── Configuration ──────────────────────────────────────────────────
-        /* .ConfigureAppConfiguration((hostCtx, config) =>
+    static IHost CreateHost(string[] args)
+    {
+        var options = new ConfigurationReaderOptions(
+            typeof(ConsoleLoggerConfigurationExtensions).Assembly
+        );
+        IConfiguration configuration = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile(APP_SETTINGS_FILE, optional: false, reloadOnChange: true)
+            .AddEnvironmentVariables()
+            .Build();
+        var applicationBuilder = Host.CreateApplicationBuilder();
+        applicationBuilder.Environment.ApplicationName = APP_NAME;
+        applicationBuilder.Services.AddLogging(builder =>
         {
-            config
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
-                .AddJsonFile(
-                    $"appsettings.{hostCtx.HostingEnvironment.EnvironmentName}.json",
-                    optional: true, reloadOnChange: false)
-                .AddEnvironmentVariables(prefix: "FILETOOL_")
-                .AddCommandLine(args);    // allows --FileTool:MaxFileSizeMb 200 etc.
-        }) */
-        // ── Logging ────────────────────────────────────────────────────────
-        /* .ConfigureLogging((hostCtx, logging) =>
-        {
-            logging.ClearProviders();
-            logging.AddConsole(opts => opts.FormatterName = "simple");
-            logging.AddConfiguration(hostCtx.Configuration.GetSection("Logging"));
-        }) */
-        // ── Services / DI ──────────────────────────────────────────────────
-        .ConfigureServices((hostCtx, services) =>
-        {
-            // Strongly-typed options bound from appsettings.json "FileTool" section
-            /* services.Configure<FileToolOptions>(
-                hostCtx.Configuration.GetSection(FileToolOptions.SectionName)); */
+            builder.ClearProviders();
+            builder.AddConfiguration(configuration);
+            builder.AddSerilog(Log.Logger, dispose: true);
+        });
+        Log.Logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(configuration, options)
+            .CreateLogger();
 
-            // Services
-            services.AddSingleton<IDelimitedService, DelimitedService>();
-            services.AddSingleton<IPatternService, PatternService>();
+        // Services
+        applicationBuilder.Services.AddSingleton<IDelimitedService, DelimitedService>();
+        applicationBuilder.Services.AddSingleton<IPatternService, PatternService>();
 
-            // Readers
-            services.AddSingleton<IDelimitedReader, DelimitedReader>();
-            services.AddSingleton<IDirectoryReader, DirectoryReader>();
+        // Readers
+        applicationBuilder.Services.AddSingleton<IDelimitedReader, DelimitedReader>();
+        applicationBuilder.Services.AddSingleton<IDirectoryReader, DirectoryReader>();
 
-            // Validators
-            services.AddSingleton<AbstractValidator<DelimitedOptions>, DelimitedOptionsValidator>();
-            services.AddSingleton<AbstractValidator<PatternOptions>, PatternOptionsValidator>();
+        // Validators
+        applicationBuilder.Services.AddSingleton<AbstractValidator<DelimitedOptions>, DelimitedOptionsValidator>();
+        applicationBuilder.Services.AddSingleton<AbstractValidator<PatternOptions>, PatternOptionsValidator>();
 
-            // Sub-Commands
-            services.AddSingleton<DelimitedCommand>();
-            services.AddSingleton<PatternCommand>();
+        // Sub-Commands
+        applicationBuilder.Services.AddSingleton<DelimitedCommand>();
+        applicationBuilder.Services.AddSingleton<PatternCommand>();
 
-            // Handlers
-            services.AddSingleton<RootHandler>();
-            services.AddSingleton<DelimitedHandler>();
-            services.AddSingleton<PatternHandler>();
+        // Handlers
+        applicationBuilder.Services.AddSingleton<RootHandler>();
+        applicationBuilder.Services.AddSingleton<DelimitedHandler>();
+        applicationBuilder.Services.AddSingleton<PatternHandler>();
 
-            // Mappers
-            services.AddSingleton<IOptionsMapper<DelimitedOptions>, DelimitedOptionsMapper>();
-            services.AddSingleton<IOptionsMapper<PatternOptions>, PatternOptionsMapper>();
+        // Mappers
+        applicationBuilder.Services.AddSingleton<IMap<Delimiter, char>, DelimiterToChar>();
+        applicationBuilder.Services.AddSingleton<IMap<char, Delimiter>, CharToDelimiter>();
+        applicationBuilder.Services.AddSingleton<IOptionsMapper<DelimitedOptions>, DelimitedOptionsMapper>();
+        applicationBuilder.Services.AddSingleton<IOptionsMapper<PatternOptions>, PatternOptionsMapper>();
 
-            // Result Writers
-            services.AddSingleton<IResultWriter<DelimitedFile>, DelimitedResultWriter>();
+        // Result Writers
+        applicationBuilder.Services.AddSingleton<IResultWriter<DelimitedFile>, DelimitedResultWriter>();
 
-            // Root CLI builder
-            services.AddSingleton<CliBuilder>();
-        })
-        .Build();
+        // Root CLI builder
+        applicationBuilder.Services.AddSingleton<CliBuilder>();
 
+        return applicationBuilder.Build();
+    }
 }

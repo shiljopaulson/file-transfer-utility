@@ -1,4 +1,5 @@
 using System.CommandLine;
+using Microsoft.Extensions.Logging;
 using Sphere.FileTransfer.Cli.Extensions;
 using Sphere.FileTransfer.Cli.Handlers;
 using Sphere.FileTransfer.Cli.Models;
@@ -11,13 +12,17 @@ namespace Sphere.FileTransfer.Cli.Commands;
 public sealed class PatternCommand : BaseCommand<PatternOptions, SegregatedDirectory[]>
 {
   private readonly PatternHandler _patternHandler;
-  public PatternCommand(PatternHandler patternHandler) : base("pattern", "Copies or Movies files based on the search patterns (Example: *.png, *.txt, *.*)")
+  private readonly ILogger<DelimitedCommand> _logger;
+  public PatternCommand(PatternHandler patternHandler, ILogger<DelimitedCommand> logger) : base("pattern", "Copies or Movies files based on the search patterns (Example: *.png, *.txt, *.*)")
   {
     _patternHandler = patternHandler;
+    _logger = logger;
   }
 
   public override Command Build()
   {
+    _logger.LogTrace("Entering PatternCommand => Build");
+
     Options.Add(new SourcesOption());
     Options.Add(new DestinationOption());
     Options.Add(new SearchPatternOption());

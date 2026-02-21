@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Services.Readers;
@@ -9,8 +10,14 @@ public interface IDirectoryReader
 
 public sealed class DirectoryReader : IDirectoryReader
 {
+  private readonly ILogger<DirectoryReader> _logger;
+  public DirectoryReader(ILogger<DirectoryReader> logger)
+  {
+    _logger = logger;
+  }
   private SegregatedDirectory Read(DirectoryInfo directoryInfo, string searchPattern)
   {
+    _logger.LogTrace("Entering IDirectoryReader => Read");
     var segregatedDirectory = new SegregatedDirectory
     {
       DirectoryPath = directoryInfo.FullName
