@@ -1,7 +1,7 @@
 using System.CommandLine;
 
-using Sphere.FileTransfer.Models;
 using Sphere.FileTransfer.Cli.Constants;
+using Sphere.FileTransfer.Models;
 
 namespace Sphere.FileTransfer.Cli.Options;
 
