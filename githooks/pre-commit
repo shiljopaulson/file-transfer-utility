@@ -1,0 +1,16 @@
+#!/bin/bash
+
+echo "Running dotnet format check..."
+
+FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.cs$')
+
+if [ -z "$FILES" ]; then
+        exit 0
+fi
+
+dotnet format --verify-no-changes --include $FILES
+
+if [ $? -ne 0 ]; then
+        echo "Formatting issues detected in staged files."
+        exit 1
+fi
