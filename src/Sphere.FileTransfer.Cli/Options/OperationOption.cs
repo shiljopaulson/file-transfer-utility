@@ -1,10 +1,11 @@
 using System.CommandLine;
+
 using Sphere.FileTransfer.Models;
 using Sphere.FileTransfer.Cli.Constants;
 
 namespace Sphere.FileTransfer.Cli.Options;
 
-public sealed class OperationOption : Option<Operation>
+internal sealed class OperationOption : Option<Operation>
 {
   public OperationOption() : base(OptionNames.Operation)
   {

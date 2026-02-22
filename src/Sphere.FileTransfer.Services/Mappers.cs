@@ -2,7 +2,7 @@ using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Services;
 
-public class Mappers
+internal static class Mappers
 {
   public static LineStatus Map(FileStatus fileStatus)
   {

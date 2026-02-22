@@ -2,12 +2,11 @@ using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Cli.Extensions;
 
-public static class DelimitedExtensions
+internal static class DelimitedExtensions
 {
-
   public static bool IsAllLinesProcessed(this DelimitedFile delimitedFile)
   {
-    if (delimitedFile.Lines is null || delimitedFile.Lines.Length == 0)
+    if (delimitedFile.Lines.Length == 0)
     {
       return false;
     }
@@ -16,7 +15,7 @@ public static class DelimitedExtensions
 
   public static bool HasAnyLinesProcessed(this DelimitedFile delimitedFile)
   {
-    if (delimitedFile.Lines is null || delimitedFile.Lines.Length == 0)
+    if (delimitedFile.Lines.Length == 0)
     {
       return false;
     }
@@ -27,7 +26,7 @@ public static class DelimitedExtensions
 
   public static bool HasAnyLinesCanceled(this DelimitedFile delimitedFile)
   {
-    if (delimitedFile.Lines is null || delimitedFile.Lines.Length == 0)
+    if (delimitedFile.Lines.Length == 0)
     {
       return false;
     }

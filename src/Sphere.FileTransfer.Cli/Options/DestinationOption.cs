@@ -1,9 +1,10 @@
 using System.CommandLine;
+
 using Sphere.FileTransfer.Cli.Constants;
 
 namespace Sphere.FileTransfer.Cli.Options;
 
-public sealed class DestinationOption : Option<DirectoryInfo>
+internal sealed class DestinationOption : Option<DirectoryInfo>
 {
   public DestinationOption() : base(OptionNames.Destination, OptionNames.DestinationAlias)
   {

@@ -1,21 +1,17 @@
 using Microsoft.Extensions.Logging;
+
 using Sphere.FileTransfer.Models;
 using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Services;
 
-public abstract class BaseFileService<T>
+public abstract class BaseFileService<T>(ILogger<T> logger)
 {
-  internal readonly ILogger<T> _logger;
-
-  public BaseFileService(ILogger<T> logger)
-  {
-    _logger = logger;
-  }
+  internal readonly ILogger<T> Logger = logger;
 
   internal (FileStatus, string) CopyOrMove(string sourceFilePath, string destinationFilePath, Operation operation, bool overwrite, CancellationToken cancellationToken)
   {
-    _logger.LogTrace("Entering IDelimitedService => Process");
+    Logger.LogTrace("Entering IDelimitedService => Process");
     try
     {
       cancellationToken.ThrowIfCancellationRequested();
@@ -42,52 +38,47 @@ public abstract class BaseFileService<T>
     }
     catch (OperationCanceledException exception)
     {
-      _logger.LogError(exception.Message);
+      Logger.LogError(exception.Message);
       return (FileStatus.Canceled, exception.Message);
     }
     catch (PathTooLongException exception)
     {
-      _logger.LogError(exception.Message);
+      Logger.LogError(exception.Message);
       return (FileStatus.Error, exception.Message);
     }
     catch (DirectoryNotFoundException exception)
     {
-      _logger.LogError(exception.Message);
+      Logger.LogError(exception.Message);
       return (FileStatus.Error, exception.Message);
     }
     catch (FileNotFoundException exception)
     {
-      _logger.LogError(exception.Message);
+      Logger.LogError(exception.Message);
       return (FileStatus.Error, exception.Message);
     }
     catch (IOException exception)
     {
-      _logger.LogError(exception.Message);
+      Logger.LogError(exception.Message);
       return (FileStatus.Error, exception.Message);
     }
     catch (ArgumentNullException exception)
     {
-      _logger.LogError(exception.Message);
+      Logger.LogError(exception.Message);
       return (FileStatus.Error, exception.Message);
     }
     catch (ArgumentException exception)
     {
-      _logger.LogError(exception.Message);
+      Logger.LogError(exception.Message);
       return (FileStatus.Error, exception.Message);
     }
     catch (UnauthorizedAccessException exception)
     {
-      _logger.LogError(exception.Message);
+      Logger.LogError(exception.Message);
       return (FileStatus.Error, exception.Message);
     }
     catch (NotSupportedException exception)
     {
-      _logger.LogError(exception.Message);
-      return (FileStatus.Error, exception.Message);
-    }
-    catch (Exception exception)
-    {
-      _logger.LogError(exception.Message);
+      Logger.LogError(exception.Message);
       return (FileStatus.Error, exception.Message);
     }
   }

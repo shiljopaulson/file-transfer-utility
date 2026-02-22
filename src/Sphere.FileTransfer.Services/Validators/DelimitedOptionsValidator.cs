@@ -1,9 +1,10 @@
 using FluentValidation;
+
 using Sphere.FileTransfer.Models;
 
 namespace Sphere.FileTransfer.Services.Validators;
 
-public class DelimitedOptionsValidator : AbstractValidator<DelimitedOptions>
+public sealed class DelimitedOptionsValidator : AbstractValidator<DelimitedOptions>
 {
   public DelimitedOptionsValidator()
   {

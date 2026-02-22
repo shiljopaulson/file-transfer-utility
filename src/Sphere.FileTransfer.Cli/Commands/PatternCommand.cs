@@ -1,5 +1,8 @@
+using System.Collections.Immutable;
 using System.CommandLine;
+
 using Microsoft.Extensions.Logging;
+
 using Sphere.FileTransfer.Cli.Extensions;
 using Sphere.FileTransfer.Cli.Handlers;
 using Sphere.FileTransfer.Cli.Models;
@@ -9,15 +12,10 @@ using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Cli.Commands;
 
-public sealed class PatternCommand : BaseCommand<PatternOptions, SegregatedDirectory[]>
+internal sealed class PatternCommand(PatternHandler patternHandler, ILogger<PatternCommand> logger) : BaseCommand<PatternOptions, ImmutableArray<SegregatedDirectory>>("pattern", "Copies or Movies files based on the search patterns (Example: *.png, *.txt, *.*)")
 {
-  private readonly PatternHandler _patternHandler;
-  private readonly ILogger<DelimitedCommand> _logger;
-  public PatternCommand(PatternHandler patternHandler, ILogger<DelimitedCommand> logger) : base("pattern", "Copies or Movies files based on the search patterns (Example: *.png, *.txt, *.*)")
-  {
-    _patternHandler = patternHandler;
-    _logger = logger;
-  }
+  private readonly PatternHandler _patternHandler = patternHandler;
+  private readonly ILogger<PatternCommand> _logger = logger;
 
   public override Command Build()
   {
@@ -43,7 +41,7 @@ public sealed class PatternCommand : BaseCommand<PatternOptions, SegregatedDirec
       return ExitCodes.Error;
     }
 
-    if (Result is null || Result.Length == 0)
+    if (Result.Length == 0)
     {
       return ExitCodes.Error;
     }
@@ -69,7 +67,6 @@ public sealed class PatternCommand : BaseCommand<PatternOptions, SegregatedDirec
   {
     cancellationToken.ThrowIfCancellationRequested();
     if (ParsedOptions is null
-      || Result is null
       || Result.Length == 0)
     {
       return;
@@ -87,13 +84,14 @@ public sealed class PatternCommand : BaseCommand<PatternOptions, SegregatedDirec
   private void ConsoleText(CancellationToken cancellationToken)
   {
     cancellationToken.ThrowIfCancellationRequested();
-    if (Result is null)
+    if (Result.Length == 0)
     {
       return;
     }
-    foreach (var directory in Result)
+    for (int i = 0; i < Result.Length; i++)
     {
-      if (directory.Files is null || directory.Files.Length == 0)
+      SegregatedDirectory? directory = Result[i];
+      if (directory.Files.Length == 0)
       {
         continue;
       }

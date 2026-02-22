@@ -1,10 +1,11 @@
 using System.CommandLine;
+
 using Sphere.FileTransfer.Cli.Constants;
 using Sphere.FileTransfer.Cli.Models;
 
 namespace Sphere.FileTransfer.Cli.Options;
 
-public sealed class OutputFormatOption : Option<OutputFormat>
+internal sealed class OutputFormatOption : Option<OutputFormat>
 {
   public OutputFormatOption() : base(OptionNames.OutputFormat)
   {

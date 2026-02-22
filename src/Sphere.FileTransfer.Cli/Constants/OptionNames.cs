@@ -1,6 +1,6 @@
 namespace Sphere.FileTransfer.Cli.Constants;
 
-internal sealed class OptionNames
+internal static class OptionNames
 {
   // Common options
   public const string Help = "--help";

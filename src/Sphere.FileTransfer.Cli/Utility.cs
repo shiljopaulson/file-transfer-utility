@@ -1,14 +1,18 @@
 using System.Reflection;
-using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json;
+
+using Microsoft.AspNetCore.Http.Json;
+
 using Sphere.FileTransfer.Cli.Models;
 
 namespace Sphere.FileTransfer.Cli;
 
 
-public static class Utility
+internal static class Utility
 {
+  private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
+
   public static void WriteLine(string message, ConsoleColor consoleColor)
   {
     Console.ForegroundColor = consoleColor;
@@ -16,10 +20,13 @@ public static class Utility
     Console.ResetColor();
   }
 
-  public static string ToJson<T>(T tObj, bool writeIndented = true) where T : class
+  public static string ToJson<T>(T tObj)
   {
-    var jsonOptions = new JsonSerializerOptions { WriteIndented = writeIndented };
-    string prettyJson = JsonSerializer.Serialize(tObj, jsonOptions);
+    if (tObj is null)
+    {
+      return string.Empty;
+    }
+    string prettyJson = JsonSerializer.Serialize(tObj, JsonSerializerOptions);
     return prettyJson;
   }
 
@@ -39,7 +46,6 @@ public static class Utility
     }
 
     // Analyze the BOM
-    //if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.UTF7;
     if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf) return Encoding.UTF8;
     if (bom[0] == 0xff && bom[1] == 0xfe && bom[2] == 0 && bom[3] == 0) return Encoding.UTF32; //UTF-32LE
     if (bom[0] == 0xff && bom[1] == 0xfe) return Encoding.Unicode; //UTF-16LE
@@ -61,8 +67,9 @@ public static class Utility
       byte[] bytes = File.ReadAllBytes(filePath);
 
       // Iterate through the bytes to check if any are non-ASCII
-      foreach (byte b in bytes)
+      for (int i = 0; i < bytes.Length; i++)
       {
+        byte b = bytes[i];
         if (b > maxAsciiValue)
         {
           // Found a non-ASCII character
@@ -73,9 +80,44 @@ public static class Utility
       // All bytes are within the ASCII range
       return true;
     }
-    catch (Exception)
+    catch (OperationCanceledException)
     {
-      // Handle potential file access errors
+      return false;
+    }
+    catch (ArgumentNullException)
+    {
+      return false;
+    }
+    catch (ArgumentException)
+    {
+      return false;
+    }
+    catch (PathTooLongException)
+    {
+      return false;
+    }
+    catch (DirectoryNotFoundException)
+    {
+      return false;
+    }
+    catch (FileNotFoundException)
+    {
+      return false;
+    }
+    catch (IOException)
+    {
+      return false;
+    }
+    catch (UnauthorizedAccessException)
+    {
+      return false;
+    }
+    catch (NotSupportedException)
+    {
+      return false;
+    }
+    catch (System.Security.SecurityException)
+    {
       return false;
     }
   }

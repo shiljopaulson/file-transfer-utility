@@ -1,5 +1,7 @@
 using FluentValidation;
+
 using Microsoft.Extensions.Logging;
+
 using Sphere.FileTransfer.Models;
 using Sphere.FileTransfer.Services.Models;
 using Sphere.FileTransfer.Services.Readers;
@@ -8,10 +10,10 @@ namespace Sphere.FileTransfer.Services;
 
 public interface IDelimitedService
 {
-  Task<DelimitedFile> Process(DelimitedOptions delimitedOptions, CancellationToken cancellationToken);
+  Task<DelimitedFile?> Process(DelimitedOptions delimitedOptions, CancellationToken cancellationToken);
 }
 
-public class DelimitedService : BaseFileService<DelimitedService>, IDelimitedService
+public sealed class DelimitedService : BaseFileService<DelimitedService>, IDelimitedService
 {
   private readonly IDelimitedReader _delimitedReader;
   private readonly AbstractValidator<DelimitedOptions> _delimitedOptionsValidator;
@@ -22,15 +24,15 @@ public class DelimitedService : BaseFileService<DelimitedService>, IDelimitedSer
     _delimitedOptionsValidator = delimitedOptionsValidator;
   }
 
-  public async Task<DelimitedFile> Process(DelimitedOptions delimitedOptions, CancellationToken cancellationToken)
+  public async Task<DelimitedFile?> Process(DelimitedOptions delimitedOptions, CancellationToken cancellationToken)
   {
-    _logger.LogTrace("Entering IDelimitedService => Process");
+    Logger.LogTrace("Entering IDelimitedService => Process");
     cancellationToken.ThrowIfCancellationRequested();
 
-    var validationResult = await _delimitedOptionsValidator.ValidateAsync(delimitedOptions, cancellationToken);
+    var validationResult = await _delimitedOptionsValidator.ValidateAsync(delimitedOptions, cancellationToken).ConfigureAwait(true);
     if (!validationResult.IsValid)
     {
-      _logger.LogError("Validation failed at {0}", string.Join(",", validationResult.Errors));
+      Logger.LogError("Validation failed at {Errors}", string.Join(",", validationResult.Errors));
       return new DelimitedFile { FileFullName = delimitedOptions.File.FullName, Status = FileStatus.Error };
     }
     var sources = delimitedOptions.Sources;
@@ -45,15 +47,19 @@ public class DelimitedService : BaseFileService<DelimitedService>, IDelimitedSer
 
     var delimitedResult = _delimitedReader.Read(delimitedFile.FullName, delimiter, !delimitedOptions.NoHeader, cancellationToken);
     if (delimitedResult is null
-      || delimitedResult.Lines is null
       || delimitedResult.Lines.Length == 0)
     {
       return new DelimitedFile { FileFullName = delimitedOptions.File.FullName };
     }
     var uniqueFiles = new Dictionary<string, DetailedFileInfo[]>();
-    for (var i = 0; i < delimitedResult.Lines.Length; i++)
+    for (var i = 0; i < delimitedResult?.Lines.Length; i++)
     {
       cancellationToken.ThrowIfCancellationRequested();
+      if (delimitedResult is null
+        || delimitedResult.Lines[i] is null)
+      {
+        continue;
+      }
 
       var (status, message) = LineValidation(delimitedResult.Lines[i], fieldIndex);
       delimitedResult.Lines[i].Status = status;
@@ -64,11 +70,15 @@ public class DelimitedService : BaseFileService<DelimitedService>, IDelimitedSer
       }
 
       var fileName = delimitedResult.Lines[i].DelimitedFields[fieldIndex].Trim();
+      if (string.IsNullOrWhiteSpace(fileName))
+      {
+        continue;
+      }
       var destinationFilePath = Path.Combine(destination.FullName, fileName);
       if (uniqueFiles.TryGetValue(fileName, out var detailedFileInfos))
       {
         delimitedResult.Lines[i].Status = LineStatus.Duplicate;
-        delimitedResult.Lines[i].Message = $"File entry initially found at '{detailedFileInfos.First().LineNumber}'";
+        delimitedResult.Lines[i].Message = $"File entry initially found at '{detailedFileInfos.FirstOrDefault()?.LineNumber}'";
         continue;
       }
       else
@@ -111,17 +121,21 @@ public class DelimitedService : BaseFileService<DelimitedService>, IDelimitedSer
         {
           if (dryRun)
           {
-            delimitedResult.Lines[i].Status = LineStatus.Unprocessed;
-            delimitedResult.Lines[i].Message = sourceFound.Message;
+            delimitedResult?.Lines[i].Status = LineStatus.Unprocessed;
+            delimitedResult?.Lines[i].Message = sourceFound.Message;
           }
           else
           {
             var detailedFileStatus = overwrite
               ? fileInfos.SelectMany(x => x.Statuses).LastOrDefault(x => x.Status == Status.SourceFileFound)
               : fileInfos.SelectMany(x => x.Statuses).FirstOrDefault(x => x.Status == Status.SourceFileFound);
+            if (detailedFileStatus is null)
+            {
+              continue;
+            }
             var (fileStatus, fileMessage) = CopyOrMove(detailedFileStatus.FilePath, destinationFilePath, operation, overwrite, cancellationToken);
-            delimitedResult.Lines[i].Status = Mappers.Map(fileStatus);
-            delimitedResult.Lines[i].Message = fileMessage;
+            delimitedResult?.Lines[i].Status = Mappers.Map(fileStatus);
+            delimitedResult?.Lines[i].Message = fileMessage;
           }
         }
 
@@ -136,15 +150,15 @@ public class DelimitedService : BaseFileService<DelimitedService>, IDelimitedSer
         }
         if (errorList.Count > 0)
         {
-          delimitedResult.Lines[i].Status = LineStatus.Error;
-          delimitedResult.Lines[i].Message = string.Join(", ", errorList);
+          delimitedResult?.Lines[i].Status = LineStatus.Error;
+          delimitedResult?.Lines[i].Message = string.Join(", ", errorList);
         }
       }
     }
     return delimitedResult;
   }
 
-  private (LineStatus, string) LineValidation(DelimitedFileLine delimitedFileLine, int fieldIndex)
+  private static (LineStatus, string) LineValidation(DelimitedFileLine? delimitedFileLine, int fieldIndex)
   {
     if (delimitedFileLine is null)
     {
@@ -154,8 +168,7 @@ public class DelimitedService : BaseFileService<DelimitedService>, IDelimitedSer
     {
       return (LineStatus.Skipped, string.Empty);
     }
-    else if (delimitedFileLine.DelimitedFields is null
-      || delimitedFileLine.DelimitedFields.Length == 0)
+    else if (delimitedFileLine.DelimitedFields.Length == 0)
     {
       return (LineStatus.Error, "Empty line.");
     }
@@ -196,7 +209,7 @@ public class DelimitedService : BaseFileService<DelimitedService>, IDelimitedSer
     return (false, string.Empty);
   }
 
-  private class DetailedFileInfo
+  private sealed class DetailedFileInfo
   {
     public required FileInfo File { get; set; }
     public required int LineNumber { get; set; }
@@ -247,7 +260,7 @@ public class DelimitedService : BaseFileService<DelimitedService>, IDelimitedSer
     }
   }
 
-  private class DetailedFileStatus
+  private sealed class DetailedFileStatus
   {
     public required string FilePath { get; set; }
     public Status? Status { get; set; }

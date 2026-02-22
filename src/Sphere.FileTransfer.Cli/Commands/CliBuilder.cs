@@ -1,5 +1,7 @@
 using System.CommandLine;
+
 using Microsoft.Extensions.Logging;
+
 using Sphere.FileTransfer.Cli.Handlers;
 using Sphere.FileTransfer.Cli.Models;
 using Sphere.FileTransfer.Cli.Options;
@@ -9,24 +11,16 @@ namespace Sphere.FileTransfer.Cli.Commands;
 /// <summary>
 /// Assembles the <see cref="RootCommand"/> with all sub-commands.
 /// </summary>
-public sealed class CliBuilder
+internal sealed class CliBuilder(
+  RootHandler rootHandler,
+  DelimitedCommand delimitedCommand,
+  PatternCommand patternCommand,
+  ILogger<CliBuilder> logger)
 {
-  private readonly RootHandler _rootHandler;
-  private readonly DelimitedCommand _delimitedCommand;
-  private readonly PatternCommand _patternCommand;
-  private readonly ILogger<CliBuilder> _logger;
-
-  public CliBuilder(
-    RootHandler rootHandler,
-    DelimitedCommand delimitedCommand,
-    PatternCommand patternCommand,
-    ILogger<CliBuilder> logger)
-  {
-    _rootHandler = rootHandler;
-    _delimitedCommand = delimitedCommand;
-    _patternCommand = patternCommand;
-    _logger = logger;
-  }
+  private readonly RootHandler _rootHandler = rootHandler;
+  private readonly DelimitedCommand _delimitedCommand = delimitedCommand;
+  private readonly PatternCommand _patternCommand = patternCommand;
+  private readonly ILogger<CliBuilder> _logger = logger;
 
   /// <summary>
   /// Builds and returns the configured <see cref="RootCommand"/>.

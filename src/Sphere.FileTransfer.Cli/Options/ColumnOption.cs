@@ -1,9 +1,10 @@
 using System.CommandLine;
+
 using Sphere.FileTransfer.Cli.Constants;
 
 namespace Sphere.FileTransfer.Cli.Options;
 
-public sealed class ColumnOption : Option<byte>
+internal sealed class ColumnOption : Option<byte>
 {
   public ColumnOption() : base(OptionNames.Column, OptionNames.ColumnAlias)
   {

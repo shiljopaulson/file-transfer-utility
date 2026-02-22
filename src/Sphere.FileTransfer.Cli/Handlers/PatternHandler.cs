@@ -1,7 +1,9 @@
+using System.Collections.Immutable;
 using System.CommandLine;
 using System.CommandLine.Help;
+
 using Microsoft.Extensions.Logging;
-using Sphere.FileTransfer.Cli.Commands;
+
 using Sphere.FileTransfer.Cli.Constants;
 using Sphere.FileTransfer.Cli.Extensions;
 using Sphere.FileTransfer.Cli.Mappers;
@@ -12,20 +14,12 @@ using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Cli.Handlers;
 
-public class PatternHandler : BaseHandler<PatternOptions, SegregatedDirectory[]>, ICommandHandler
+internal sealed class PatternHandler(IPatternService service, IOptionsMapper<PatternOptions> optionsMapper, IResultWriter<ImmutableArray<SegregatedDirectory>> resultWriter, ILogger<PatternHandler> logger) : BaseHandler<PatternOptions, ImmutableArray<SegregatedDirectory>>, ICommandHandler
 {
-  private readonly IPatternService _service;
-  private readonly IOptionsMapper<PatternOptions> _optionsMapper;
-  private readonly IResultWriter<SegregatedDirectory[]> _resultWriter;
-  private readonly ILogger<PatternCommand> _logger;
-
-  public PatternHandler(IPatternService service, IOptionsMapper<PatternOptions> optionsMapper, IResultWriter<SegregatedDirectory[]> resultWriter, ILogger<PatternCommand> logger)
-  {
-    _service = service;
-    _optionsMapper = optionsMapper;
-    _resultWriter = resultWriter;
-    _logger = logger;
-  }
+  private readonly IPatternService _service = service;
+  private readonly IOptionsMapper<PatternOptions> _optionsMapper = optionsMapper;
+  private readonly IResultWriter<ImmutableArray<SegregatedDirectory>> _resultWriter = resultWriter;
+  private readonly ILogger<PatternHandler> _logger = logger;
 
   public async Task<int> Handle(ParseResult parseResult, CancellationToken cancellationToken)
   {
@@ -39,10 +33,10 @@ public class PatternHandler : BaseHandler<PatternOptions, SegregatedDirectory[]>
     }
     ParseDefaultOptions(parseResult);
     ParsedOptions = _optionsMapper.Map(parseResult);
-    Result = await _service.Process(ParsedOptions, cancellationToken);
+    Result = await _service.Process(ParsedOptions, cancellationToken).ConfigureAwait(true);
     var exitCode = GetExitCode();
     _resultWriter.Write(Result, OutputFormat, cancellationToken);
-    return ExitCodes.Success;
+    return exitCode;
   }
 
   private int GetExitCode()
@@ -51,7 +45,7 @@ public class PatternHandler : BaseHandler<PatternOptions, SegregatedDirectory[]>
     {
       return ExitCodes.Error;
     }
-    if (Result is null || Result.Length == 0)
+    if (Result.Length == 0)
     {
       return ExitCodes.Error;
     }

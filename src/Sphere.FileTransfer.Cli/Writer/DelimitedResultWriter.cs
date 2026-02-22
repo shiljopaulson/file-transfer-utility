@@ -1,19 +1,22 @@
 using System.Text.Json;
+
+using Microsoft.Extensions.Logging;
+
 using Sphere.FileTransfer.Cli.Mappers;
 using Sphere.FileTransfer.Cli.Models;
 using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Cli.Writer;
 
-public sealed class DelimitedResultWriter : IResultWriter<DelimitedFile>
+internal sealed class DelimitedResultWriter(IMap<char, Delimiter> charToDelimiterMapper, ILogger<DelimitedResultWriter> logger) : IResultWriter<DelimitedFile>
 {
-  private readonly IMap<char, Delimiter> _charToDelimiterMapper;
-  public DelimitedResultWriter(IMap<char, Delimiter> charToDelimiterMapper)
+  private readonly ILogger<DelimitedResultWriter> _logger = logger;
+
+  private readonly IMap<char, Delimiter> _charToDelimiterMapper = charToDelimiterMapper;
+
+  public void Write(DelimitedFile? result, OutputFormat format, CancellationToken cancellationToken)
   {
-    _charToDelimiterMapper = charToDelimiterMapper;
-  }
-  public void Write(DelimitedFile result, OutputFormat format, CancellationToken cancellationToken)
-  {
+    _logger.LogTrace("Entering DelimitedResultWriter => Write");
     cancellationToken.ThrowIfCancellationRequested();
     if (result is null)
     {
@@ -24,7 +27,6 @@ public sealed class DelimitedResultWriter : IResultWriter<DelimitedFile>
       case OutputFormat.Json:
         WriteJson(result, cancellationToken);
         break;
-      case OutputFormat.Text:
       default:
         WriteText(result, cancellationToken);
         break;
@@ -34,12 +36,9 @@ public sealed class DelimitedResultWriter : IResultWriter<DelimitedFile>
   private void WriteText(DelimitedFile result, CancellationToken cancellationToken)
   {
     cancellationToken.ThrowIfCancellationRequested();
-    var rows = 0;
-    if (result.Lines is not null && result.Lines.Length > 0)
+    if (result.Lines.Length == 0)
     {
-      rows = result.HasHeader
-        ? (result.Lines.Length == 0 ? 0 : result.Lines.Length - 1)
-        : result.Lines.Length;
+      return;
     }
     int terminalWidth = Console.WindowWidth;
     int spacing = 4;
@@ -50,13 +49,12 @@ public sealed class DelimitedResultWriter : IResultWriter<DelimitedFile>
     Console.WriteLine();
     Console.WriteLine($"{padding}{padding}File      : {result.FileFullName}");
     Console.WriteLine($"{padding}{padding}Delimiter : '{result.Delimiter}'({_charToDelimiterMapper.Map(result.Delimiter)})");
-    Console.WriteLine($"{padding}{padding}Lines     : {(result.HasHeader && result.Lines is not null ? result.Lines.Length - 1 : result.Lines?.Length)}");
+    Console.WriteLine($"{padding}{padding}Lines     : {(result.HasHeader ? result.Lines.Length - 1 : result.Lines.Length)}");
     Console.WriteLine();
     Console.WriteLine($"{padding}{repeatedString}");
     Console.WriteLine();
 
-    if (result.Lines is null
-      || result.Lines.Length == 0)
+    if (result.Lines.Length == 0)
     {
       return;
     }

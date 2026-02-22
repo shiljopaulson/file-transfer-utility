@@ -1,14 +1,21 @@
+using System.Collections.Immutable;
 using System.Text.Json;
+
+using Microsoft.Extensions.Logging;
+
 using Sphere.FileTransfer.Cli.Models;
 using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Cli.Writer;
 
-public sealed class PatternResultWriter : IResultWriter<SegregatedDirectory[]>
+internal sealed class PatternResultWriter(ILogger<PatternResultWriter> logger) : IResultWriter<ImmutableArray<SegregatedDirectory>>
 {
-  public void Write(SegregatedDirectory[] result, OutputFormat format, CancellationToken cancellationToken)
+  private readonly ILogger<PatternResultWriter> _logger = logger;
+
+  public void Write(ImmutableArray<SegregatedDirectory> result, OutputFormat format, CancellationToken cancellationToken)
   {
-    if (result is null || result.Length == 0)
+    _logger.LogTrace("Entering PatternResultWriter => Write");
+    if (result.Length == 0)
     {
       return;
     }
@@ -17,14 +24,13 @@ public sealed class PatternResultWriter : IResultWriter<SegregatedDirectory[]>
       case OutputFormat.Json:
         WriteJson(result, cancellationToken);
         break;
-      case OutputFormat.Text:
       default:
         WriteText(result, cancellationToken);
         break;
     }
   }
 
-  private void WriteText(SegregatedDirectory[] result, CancellationToken cancellationToken)
+  private static void WriteText(ImmutableArray<SegregatedDirectory> result, CancellationToken cancellationToken)
   {
     cancellationToken.ThrowIfCancellationRequested();
     var sourceDirectories = result.Select(x => x.DirectoryPath).ToArray();
@@ -44,9 +50,10 @@ public sealed class PatternResultWriter : IResultWriter<SegregatedDirectory[]>
     Console.WriteLine($"{padding}{repeatedString}");
     Console.WriteLine();
 
-    foreach (var directory in result)
+    for (int i = 0; i < result.Length; i++)
     {
-      if (directory.Files is null || directory.Files.Length == 0)
+      SegregatedDirectory? directory = result[i];
+      if (directory.Files.Length == 0)
       {
         continue;
       }
@@ -69,7 +76,7 @@ public sealed class PatternResultWriter : IResultWriter<SegregatedDirectory[]>
     }
   }
 
-  private static void WriteJson(SegregatedDirectory[] result, CancellationToken cancellationToken)
+  private static void WriteJson(ImmutableArray<SegregatedDirectory> result, CancellationToken cancellationToken)
   {
     cancellationToken.ThrowIfCancellationRequested();
     Console.WriteLine(JsonSerializer.Serialize(result));

@@ -6,7 +6,7 @@ namespace Sphere.FileTransfer.Cli.Writer;
 /// Renders a result of type <typeparamref name="T"/> to stdout
 /// in the requested <see cref="OutputFormat"/>.
 /// </summary>
-public interface IResultWriter<T>
+internal interface IResultWriter<in T>
 {
-  void Write(T result, OutputFormat format, CancellationToken cancellationToken);
+  void Write(T? result, OutputFormat format, CancellationToken cancellationToken);
 }

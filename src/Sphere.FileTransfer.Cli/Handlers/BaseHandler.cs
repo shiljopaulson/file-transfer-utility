@@ -1,10 +1,11 @@
 using System.CommandLine;
+
 using Sphere.FileTransfer.Cli.Constants;
 using Sphere.FileTransfer.Cli.Models;
 
 namespace Sphere.FileTransfer.Cli.Handlers;
 
-public abstract class BaseHandler<TOptions, TResult>
+internal abstract class BaseHandler<TOptions, TResult>
 {
   internal bool Quiet { get; set; }
   internal OutputFormat OutputFormat { get; set; }

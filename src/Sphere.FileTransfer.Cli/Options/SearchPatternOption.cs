@@ -1,9 +1,10 @@
 using System.CommandLine;
+
 using Sphere.FileTransfer.Cli.Constants;
 
 namespace Sphere.FileTransfer.Cli.Options;
 
-public sealed class SearchPatternOption : Option<string>
+internal sealed class SearchPatternOption : Option<string>
 {
   public SearchPatternOption() : base(OptionNames.SearchPattern, OptionNames.SearchPatternAlias)
   {

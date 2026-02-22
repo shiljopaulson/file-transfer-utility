@@ -1,10 +1,11 @@
 using System.CommandLine;
+
 using Sphere.FileTransfer.Cli.Constants;
 using Sphere.FileTransfer.Cli.Models;
 
 namespace Sphere.FileTransfer.Cli.Options;
 
-public sealed class DelimiterOption : Option<Delimiter>
+internal sealed class DelimiterOption : Option<Delimiter>
 {
   public DelimiterOption() : base(OptionNames.Delimiter)
   {

@@ -1,5 +1,8 @@
+using System.Collections.Immutable;
 using System.Security;
+
 using Microsoft.Extensions.Logging;
+
 using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Services.Readers;
@@ -30,13 +33,12 @@ public sealed class DelimitedReader : IDelimitedReader
       string line;
 
       using StreamReader streamReader = new(delimitedFile.FileFullName, true);
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
       while ((line = streamReader.ReadLine()) != null)
       {
         cancellationToken.ThrowIfCancellationRequested();
         lineNumber++;
 
-        var delimitedFields = string.IsNullOrWhiteSpace(line) ? [] : line.Split(delimitedFile.Delimiter);
+        var delimitedFields = string.IsNullOrWhiteSpace(line) ? [] : line.Split(delimitedFile.Delimiter).ToImmutableArray();
         var delimitedFileLine = new DelimitedFileLine { Number = lineNumber, Data = line, DelimitedFields = delimitedFields };
         if (delimitedFields.Length == 0)
         {
@@ -55,7 +57,6 @@ public sealed class DelimitedReader : IDelimitedReader
         }
         lines.Add(delimitedFileLine);
       }
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
     }
     catch (OperationCanceledException exception)
     {
@@ -122,12 +123,6 @@ public sealed class DelimitedReader : IDelimitedReader
       _logger.LogError(exception.Message);
       delimitedFile.Status = FileStatus.Error;
       delimitedFile.Message = $"{nameof(SecurityException)} while reading line number {lineNumber}, {exception.Message}";
-    }
-    catch (Exception exception)
-    {
-      _logger.LogError(exception.Message);
-      delimitedFile.Status = FileStatus.Error;
-      delimitedFile.Message = exception.Message;
     }
     finally
     {

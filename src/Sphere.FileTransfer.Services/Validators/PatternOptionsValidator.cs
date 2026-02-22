@@ -1,9 +1,10 @@
 using FluentValidation;
+
 using Sphere.FileTransfer.Models;
 
 namespace Sphere.FileTransfer.Services.Validators;
 
-public class PatternOptionsValidator : AbstractValidator<PatternOptions>
+public sealed class PatternOptionsValidator : AbstractValidator<PatternOptions>
 {
   public PatternOptionsValidator()
   {

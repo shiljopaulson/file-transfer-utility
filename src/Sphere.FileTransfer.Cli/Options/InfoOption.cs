@@ -1,9 +1,10 @@
 using System.CommandLine;
+
 using Sphere.FileTransfer.Cli.Constants;
 
 namespace Sphere.FileTransfer.Cli.Options;
 
-public sealed class InfoOption : Option<bool>
+internal sealed class InfoOption : Option<bool>
 {
   public InfoOption() : base(OptionNames.Info)
   {

@@ -1,10 +1,11 @@
 using System.CommandLine;
+
 using Sphere.FileTransfer.Cli.Constants;
 using Sphere.FileTransfer.Cli.Models;
 
 namespace Sphere.FileTransfer.Cli.Commands;
 
-public abstract class BaseCommand<TParsedOption, TResult>(string name, string? description) : Command(name, description) where TParsedOption : class
+internal abstract class BaseCommand<TParsedOption, TResult>(string name, string? description) : Command(name, description) where TParsedOption : class
 {
   public bool Quiet { get; internal set; }
   public OutputFormat OutputFormat { get; internal set; }

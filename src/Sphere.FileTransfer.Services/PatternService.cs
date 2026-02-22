@@ -1,5 +1,9 @@
+using System.Collections.Immutable;
+
 using FluentValidation;
+
 using Microsoft.Extensions.Logging;
+
 using Sphere.FileTransfer.Models;
 using Sphere.FileTransfer.Services.Models;
 using Sphere.FileTransfer.Services.Readers;
@@ -8,10 +12,10 @@ namespace Sphere.FileTransfer.Services;
 
 public interface IPatternService
 {
-  Task<SegregatedDirectory[]> Process(PatternOptions patternOptions, CancellationToken cancellationToken);
+  Task<ImmutableArray<SegregatedDirectory>> Process(PatternOptions patternOptions, CancellationToken cancellationToken);
 }
 
-public class PatternService : BaseFileService<PatternService>, IPatternService
+public sealed class PatternService : BaseFileService<PatternService>, IPatternService
 {
   private readonly IDirectoryReader _directoryFileReader;
   private readonly AbstractValidator<PatternOptions> _patternOptionsValidator;
@@ -22,14 +26,14 @@ public class PatternService : BaseFileService<PatternService>, IPatternService
     _patternOptionsValidator = patternOptionsValidator;
   }
 
-  public async Task<SegregatedDirectory[]> Process(PatternOptions patternOptions, CancellationToken cancellationToken)
+  public async Task<ImmutableArray<SegregatedDirectory>> Process(PatternOptions patternOptions, CancellationToken cancellationToken)
   {
     cancellationToken.ThrowIfCancellationRequested();
 
-    var validationResult = _patternOptionsValidator.Validate(patternOptions);
+    var validationResult = await _patternOptionsValidator.ValidateAsync(patternOptions, cancellationToken).ConfigureAwait(true);
     if (!validationResult.IsValid)
     {
-      _logger.LogError("Validation failed at {0}", string.Join(",", validationResult.Errors));
+      Logger.LogError("Validation failed at {Errors}", string.Join(",", validationResult.Errors));
       return [];
     }
 
@@ -40,24 +44,27 @@ public class PatternService : BaseFileService<PatternService>, IPatternService
     var dryRun = patternOptions.DryRun;
     var operation = patternOptions.Operation;
 
-    var uniqueSourceFileNames = new Dictionary<string, SegregatedFile[]>();
+    var uniqueSourceFileNames = new Dictionary<string, ImmutableArray<SegregatedFile>>();
     var uniqueDestinationFileNames = new Dictionary<string, string>();
     for (var i = 0; i < segregatedDirectories.Length; i++)
     {
       if (segregatedDirectories[i] is null
           || segregatedDirectories[i].Status != DirectoryStatus.Unprocessed
-          || segregatedDirectories[i].Files is null
-          || segregatedDirectories[i].Files?.Length == 0)
+          || segregatedDirectories[i].Files.Length == 0)
       {
         continue;
       }
-      for (var j = 0; j < segregatedDirectories[i].Files?.Length; j++)
+      for (var j = 0; j < segregatedDirectories[i].Files.Length; j++)
       {
-        var fileName = segregatedDirectories[i].Files?[j].File.Name;
+        var fileName = segregatedDirectories[i].Files[j].File.Name;
+        if (fileName is null || segregatedDirectories[i] is null || segregatedDirectories[i].Files[j] is null)
+        {
+          continue;
+        }
         if (uniqueSourceFileNames.TryGetValue(fileName, out var segregatedFiles))
         {
-          segregatedDirectories[i].Files?[j].Status = FileStatus.Duplicate;
-          segregatedDirectories[i].Files?[j].Message = $"Originally found at '{uniqueSourceFileNames[fileName].First().File.FullName}'";
+          segregatedDirectories[i].Files[j].Status = FileStatus.Duplicate;
+          segregatedDirectories[i].Files[j].Message = $"Originally found at '{uniqueSourceFileNames[fileName].FirstOrDefault()?.File.FullName}'";
           uniqueSourceFileNames[fileName] = [.. segregatedFiles, segregatedDirectories[i].Files[j]];
           continue;
         }
@@ -70,8 +77,8 @@ public class PatternService : BaseFileService<PatternService>, IPatternService
             : string.Empty;
           if (!overwrite && fileExistAtDestination)
           {
-            segregatedDirectories[i].Files?[j].Message = uniqueDestinationFileNames[fileName];
-            segregatedDirectories[i].Files?[j].Status = FileStatus.Error;
+            segregatedDirectories[i].Files[j].Message = uniqueDestinationFileNames[fileName];
+            segregatedDirectories[i].Files[j].Status = FileStatus.Error;
           }
         }
         uniqueSourceFileNames[fileName] = [segregatedDirectories[i].Files[j]];
@@ -135,17 +142,17 @@ public class PatternService : BaseFileService<PatternService>, IPatternService
     return segregatedDirectories;
   }
 
-  private SegregatedDirectory GetDirectory(SegregatedDirectory[] segregatedDirectories, SegregatedFile segregatedFile)
+  private static SegregatedDirectory? GetDirectory(ImmutableArray<SegregatedDirectory> segregatedDirectories, SegregatedFile segregatedFile)
   {
-    return segregatedDirectories.First(x => x.DirectoryPath == segregatedFile.File.FullName);
+    return segregatedDirectories.FirstOrDefault(x => x.DirectoryPath == segregatedFile.File.FullName);
   }
 
-  private SegregatedFile? GetSegregatedFile(SegregatedDirectory segregatedDirectory, string fileFullName)
+  private static SegregatedFile? GetSegregatedFile(SegregatedDirectory segregatedDirectory, string fileFullName)
   {
-    return segregatedDirectory?.Files?.FirstOrDefault(x => x.File.FullName == fileFullName);
+    return segregatedDirectory?.Files.FirstOrDefault(x => x.File.FullName == fileFullName);
   }
 
-  private void Update(ref SegregatedFile? segregatedFile, FileStatus fileStatus, string message)
+  private static void Update(ref SegregatedFile? segregatedFile, FileStatus fileStatus, string message)
   {
     if (segregatedFile is not null)
     {

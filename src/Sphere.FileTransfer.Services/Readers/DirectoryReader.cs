@@ -1,11 +1,14 @@
+using System.Collections.Immutable;
+
 using Microsoft.Extensions.Logging;
+
 using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Services.Readers;
 
 public interface IDirectoryReader
 {
-  SegregatedDirectory[] Read(DirectoryInfo[] directories, string searchPattern, CancellationToken cancellationToken);
+  ImmutableArray<SegregatedDirectory> Read(ImmutableArray<DirectoryInfo> directories, string searchPattern, CancellationToken cancellationToken);
 }
 
 public sealed class DirectoryReader : IDirectoryReader
@@ -31,14 +34,14 @@ public sealed class DirectoryReader : IDirectoryReader
         segregatedDirectory.Status = DirectoryStatus.NoMatchingFiles;
         return segregatedDirectory;
       }
-      segregatedDirectory.Files = files.Select(x => new SegregatedFile { File = x }).ToArray();
+      segregatedDirectory.Files = files.Select(x => new SegregatedFile { File = x }).ToImmutableArray();
     }
     catch (OperationCanceledException exception)
     {
       _logger.LogError(exception.Message);
       segregatedDirectory.Status = DirectoryStatus.Canceled;
     }
-    catch (Exception exception)
+    catch (ArgumentNullException exception)
     {
       _logger.LogError(exception.Message);
       segregatedDirectory.Status = DirectoryStatus.Error;
@@ -46,7 +49,7 @@ public sealed class DirectoryReader : IDirectoryReader
     return segregatedDirectory;
   }
 
-  public SegregatedDirectory[] Read(DirectoryInfo[] directories, string searchPattern, CancellationToken cancellationToken)
+  public ImmutableArray<SegregatedDirectory> Read(ImmutableArray<DirectoryInfo> directories, string searchPattern, CancellationToken cancellationToken)
   {
     return [.. directories.Select(x => Read(x, searchPattern, cancellationToken))];
   }

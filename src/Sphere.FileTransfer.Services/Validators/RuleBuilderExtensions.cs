@@ -1,11 +1,13 @@
+using System.Collections.Immutable;
+
 using FluentValidation;
 
 namespace Sphere.FileTransfer.Services.Validators;
 
 public static class RuleBuilderExtensions
 {
-  public static IRuleBuilderOptions<T, DirectoryInfo[]> NoDuplicates<T>(
-        this IRuleBuilder<T, DirectoryInfo[]> ruleBuilder)
+  public static IRuleBuilderOptions<T, ImmutableArray<DirectoryInfo>> NoDuplicates<T>(
+        this IRuleBuilder<T, ImmutableArray<DirectoryInfo>> ruleBuilder)
   {
     return ruleBuilder.Must(static (_, directories) =>
     {
@@ -45,8 +47,8 @@ public static class RuleBuilderExtensions
     .WithMessage("File must exist.");
   }
 
-  public static IRuleBuilderOptionsConditions<T, DirectoryInfo[]> AllDirectoriesMustExist<T>(
-          this IRuleBuilder<T, DirectoryInfo[]> ruleBuilder)
+  public static IRuleBuilderOptionsConditions<T, ImmutableArray<DirectoryInfo>> AllDirectoriesMustExist<T>(
+          this IRuleBuilder<T, ImmutableArray<DirectoryInfo>> ruleBuilder)
   {
     return ruleBuilder.Custom((directories, context) =>
     {
@@ -57,7 +59,7 @@ public static class RuleBuilderExtensions
           .Select(d => d.FullName)
           .ToList();
 
-      if (nonExisting.Any())
+      if (nonExisting.Count > 0)
       {
         context.AddFailure(
             $"The following directories do not exist: {string.Join(", ", nonExisting)}");

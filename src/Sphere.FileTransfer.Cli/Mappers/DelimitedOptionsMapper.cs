@@ -1,24 +1,25 @@
+using System.Collections.Immutable;
 using System.CommandLine;
+
+using Microsoft.Extensions.Logging;
+
 using Sphere.FileTransfer.Cli.Constants;
 using Sphere.FileTransfer.Cli.Models;
 using Sphere.FileTransfer.Models;
 
 namespace Sphere.FileTransfer.Cli.Mappers;
 
-public class DelimitedOptionsMapper : IOptionsMapper<DelimitedOptions>
+internal sealed class DelimitedOptionsMapper(IMap<Delimiter, char> delimiterToCharMapper, ILogger<DelimitedOptionsMapper> logger) : IOptionsMapper<DelimitedOptions>
 {
-  private readonly IMap<Delimiter, char> _delimiterToCharMapper;
-  public DelimitedOptionsMapper(IMap<Delimiter, char> delimiterToCharMapper)
-  {
-    _delimiterToCharMapper = delimiterToCharMapper;
-  }
+  private readonly ILogger<DelimitedOptionsMapper> _logger = logger;
+  private readonly IMap<Delimiter, char> _delimiterToCharMapper = delimiterToCharMapper;
+
   public DelimitedOptions Map(ParseResult parseResult)
   {
+    _logger.LogTrace("Entering DelimitedOptionsMapper => Map");
     var delimiter = parseResult.GetValue<Delimiter>(OptionNames.Delimiter);
-
-#pragma warning disable CS8604 // Possible null reference argument.
     var delimitedOptions = new DelimitedOptions(
-      parseResult.GetValue<DirectoryInfo[]>(OptionNames.Sources),
+      parseResult.GetValue<DirectoryInfo[]>(OptionNames.Sources).ToImmutableArray(),
       parseResult.GetValue<DirectoryInfo>(OptionNames.Destination),
       parseResult.GetValue<Operation>(OptionNames.Operation),
       parseResult.GetValue<bool>(OptionNames.Overwrite),
@@ -27,7 +28,6 @@ public class DelimitedOptionsMapper : IOptionsMapper<DelimitedOptions>
       parseResult.GetValue<byte>(OptionNames.Column),
       parseResult.GetValue<bool>(OptionNames.NoHeader),
       _delimiterToCharMapper.Map(delimiter));
-#pragma warning restore CS8604 // Possible null reference argument.
     return delimitedOptions;
   }
 }

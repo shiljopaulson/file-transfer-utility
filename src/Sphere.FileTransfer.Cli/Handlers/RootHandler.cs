@@ -1,16 +1,18 @@
 using System.CommandLine;
 using System.Text;
+
 using Microsoft.Extensions.Logging;
+
 using Sphere.FileTransfer.Cli.Constants;
 
 namespace Sphere.FileTransfer.Cli.Handlers;
 
-public interface ICommandHandler
+internal interface ICommandHandler
 {
   Task<int> Handle(ParseResult parseResult, CancellationToken cancellationToken);
 }
 
-public class RootHandler : ICommandHandler
+internal sealed class RootHandler : ICommandHandler
 {
   private readonly ILogger<RootHandler> _logger;
   public RootHandler(ILogger<RootHandler> logger)
@@ -41,7 +43,7 @@ public class RootHandler : ICommandHandler
         stringBuilder.AppendLine($"Contributors: {assemblyDetails.Contributors}");
         stringBuilder.AppendLine($"More Info: {assemblyDetails.MoreInfo}");
       }
-      stringBuilder.Append("\n");
+      stringBuilder.AppendLine();
       Console.Write(stringBuilder);
     }
     return ExitCodes.Success;

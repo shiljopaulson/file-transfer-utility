@@ -1,7 +1,7 @@
 namespace Sphere.FileTransfer.Cli.Models;
 
-public enum OutputFormat
+internal enum OutputFormat
 {
-    Text,
-    Json
+  Text,
+  Json
 }

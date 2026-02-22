@@ -1,6 +1,6 @@
 namespace Sphere.FileTransfer.Cli.Models;
 
-public enum Delimiter
+internal enum Delimiter
 {
   Comma,
   Tab,

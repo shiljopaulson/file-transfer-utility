@@ -1,9 +1,8 @@
 using Sphere.FileTransfer.Models;
-using Sphere.FileTransfer.Cli.Models;
 
 namespace Sphere.FileTransfer.Cli.Constants;
 
-internal sealed class DefaultOptions
+internal static class DefaultOptions
 {
   public const Operation FileMode = Operation.Copy;
   public const Cli.Models.OutputFormat OutputFormat = Cli.Models.OutputFormat.Text;

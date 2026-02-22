@@ -1,6 +1,8 @@
 using System.CommandLine;
 using System.CommandLine.Help;
+
 using Microsoft.Extensions.Logging;
+
 using Sphere.FileTransfer.Cli.Constants;
 using Sphere.FileTransfer.Cli.Extensions;
 using Sphere.FileTransfer.Cli.Mappers;
@@ -11,20 +13,12 @@ using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Cli.Handlers;
 
-public class DelimitedHandler : BaseHandler<DelimitedOptions, DelimitedFile>, ICommandHandler
+internal sealed class DelimitedHandler(IDelimitedService delimitedService, IOptionsMapper<DelimitedOptions> optionsMapper, IResultWriter<DelimitedFile> resultWriter, ILogger<DelimitedHandler> logger) : BaseHandler<DelimitedOptions, DelimitedFile>, ICommandHandler
 {
-  private readonly IDelimitedService _service;
-  private readonly IOptionsMapper<DelimitedOptions> _optionsMapper;
-  private readonly IResultWriter<DelimitedFile> _resultWriter;
-  private readonly ILogger<DelimitedHandler> _logger;
-
-  public DelimitedHandler(IDelimitedService delimitedService, IOptionsMapper<DelimitedOptions> optionsMapper, IResultWriter<DelimitedFile> resultWriter, ILogger<DelimitedHandler> logger)
-  {
-    _service = delimitedService;
-    _optionsMapper = optionsMapper;
-    _resultWriter = resultWriter;
-    _logger = logger;
-  }
+  private readonly IDelimitedService _service = delimitedService;
+  private readonly IOptionsMapper<DelimitedOptions> _optionsMapper = optionsMapper;
+  private readonly IResultWriter<DelimitedFile> _resultWriter = resultWriter;
+  private readonly ILogger<DelimitedHandler> _logger = logger;
 
   public async Task<int> Handle(ParseResult parseResult, CancellationToken cancellationToken)
   {
@@ -39,9 +33,9 @@ public class DelimitedHandler : BaseHandler<DelimitedOptions, DelimitedFile>, IC
     }
     ParseDefaultOptions(parseResult);
     ParsedOptions = _optionsMapper.Map(parseResult);
-    Result = await _service.Process(ParsedOptions, cancellationToken);
+    Result = await _service.Process(ParsedOptions, cancellationToken).ConfigureAwait(true);
     var exitCode = GetExitCode();
-    Result.Status = GetFileStatus(exitCode);
+    Result?.Status = GetFileStatus(exitCode);
     _resultWriter.Write(Result, OutputFormat, cancellationToken);
     return exitCode;
   }
@@ -51,7 +45,6 @@ public class DelimitedHandler : BaseHandler<DelimitedOptions, DelimitedFile>, IC
     if (ParsedOptions is null
       || Result is null
       || Result.Status == FileStatus.Error
-      || Result.Lines is null
       || Result.Lines.Length == 0)
     {
       return ExitCodes.Error;
@@ -82,38 +75,5 @@ public class DelimitedHandler : BaseHandler<DelimitedOptions, DelimitedFile>, IC
       ExitCodes.Canceled => FileStatus.Canceled,
       _ => FileStatus.Error,
     };
-  }
-  private void ConsoleText(CancellationToken cancellationToken)
-  {
-    cancellationToken.ThrowIfCancellationRequested();
-    if (Result is null
-      || Result.Lines is null
-      || Result.Lines.Length == 0)
-    {
-      return;
-    }
-    foreach (var item in Result.Lines)
-    {
-      cancellationToken.ThrowIfCancellationRequested();
-      switch (item.Status)
-      {
-        case LineStatus.Skipped:
-          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}", ConsoleColor.DarkGreen);
-          break;
-        case LineStatus.Unprocessed:
-        case LineStatus.Canceled:
-          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, Message: {item.Message}", ConsoleColor.Cyan);
-          break;
-        case LineStatus.Duplicate:
-          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, Message: {item.Message}", ConsoleColor.Yellow);
-          break;
-        case LineStatus.Processed:
-          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, Message: {item.Message}", ConsoleColor.Green);
-          break;
-        default:
-          Utility.WriteLine($"Line: {item.Number}, Status: {item.Status}, Message: {item.Message}", ConsoleColor.Red);
-          break;
-      }
-    }
   }
 }

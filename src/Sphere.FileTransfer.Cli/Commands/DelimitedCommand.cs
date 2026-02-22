@@ -1,5 +1,7 @@
 using System.CommandLine;
+
 using Microsoft.Extensions.Logging;
+
 using Sphere.FileTransfer.Cli.Handlers;
 using Sphere.FileTransfer.Cli.Models;
 using Sphere.FileTransfer.Cli.Options;
@@ -8,7 +10,7 @@ using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Cli.Commands;
 
-public sealed class DelimitedCommand : BaseCommand<DelimitedOptions, DelimitedFile>
+internal sealed class DelimitedCommand : BaseCommand<DelimitedOptions, DelimitedFile>
 {
   private readonly DelimitedHandler _delimitedHandler;
   private readonly ILogger<DelimitedCommand> _logger;

@@ -1,6 +1,6 @@
 namespace Sphere.FileTransfer.Cli.Mappers;
 
-public interface IMap<TFromType, TToType>
+internal interface IMap<in TFromType, out TToType>
 {
   TToType Map(TFromType fromType);
 }

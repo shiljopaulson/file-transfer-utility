@@ -1,6 +1,6 @@
 namespace Sphere.FileTransfer.Cli.Models;
 
-internal class AssemblyDetails
+internal sealed class AssemblyDetails
 {
   public string? Title { get; set; }
   public string? Description { get; set; }
