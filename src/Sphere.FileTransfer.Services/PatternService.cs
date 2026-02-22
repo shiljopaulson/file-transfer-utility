@@ -53,11 +53,11 @@ public class PatternService : BaseFileService<PatternService>, IPatternService
       }
       for (var j = 0; j < segregatedDirectories[i].Files?.Length; j++)
       {
-        var fileName = segregatedDirectories[i].Files[j].File.Name;
+        var fileName = segregatedDirectories[i].Files?[j].File.Name;
         if (uniqueSourceFileNames.TryGetValue(fileName, out var segregatedFiles))
         {
-          segregatedDirectories[i].Files[j].Status = FileStatus.Duplicate;
-          segregatedDirectories[i].Files[j].Message = $"Originally found at '{uniqueSourceFileNames[fileName].First().File.FullName}'";
+          segregatedDirectories[i].Files?[j].Status = FileStatus.Duplicate;
+          segregatedDirectories[i].Files?[j].Message = $"Originally found at '{uniqueSourceFileNames[fileName].First().File.FullName}'";
           uniqueSourceFileNames[fileName] = [.. segregatedFiles, segregatedDirectories[i].Files[j]];
           continue;
         }
@@ -70,8 +70,8 @@ public class PatternService : BaseFileService<PatternService>, IPatternService
             : string.Empty;
           if (!overwrite && fileExistAtDestination)
           {
-            segregatedDirectories[i].Files[j].Message = uniqueDestinationFileNames[fileName];
-            segregatedDirectories[i].Files[j].Status = FileStatus.Error;
+            segregatedDirectories[i].Files?[j].Message = uniqueDestinationFileNames[fileName];
+            segregatedDirectories[i].Files?[j].Status = FileStatus.Error;
           }
         }
         uniqueSourceFileNames[fileName] = [segregatedDirectories[i].Files[j]];

@@ -24,15 +24,24 @@ public class RootHandler : ICommandHandler
     cancellationToken.ThrowIfCancellationRequested();
     if (parseResult.GetValue<bool>(OptionNames.Info))
     {
-      var (version, informationalVersion) = Utility.GetVersion();
       var stringBuilder = new StringBuilder();
-      stringBuilder.AppendLine("_description");
       stringBuilder.Append("\n\n");
-      stringBuilder.AppendLine($"Version: {version}");
-      stringBuilder.AppendLine($"Informational Version: {informationalVersion}");
-      stringBuilder.AppendLine("License: MIT License(https://mit-license.org/)");
-      stringBuilder.AppendLine("Learn more: https://github.com/shiljopaulson");
-      stringBuilder.AppendLine("Contributors: Shiljo Paulson");
+      var assemblyDetails = Utility.GetAssemblyDetails();
+      if (assemblyDetails is not null)
+      {
+        stringBuilder.AppendLine($"Title: {assemblyDetails.Title}");
+        stringBuilder.AppendLine($"Description: {assemblyDetails.Description}");
+        stringBuilder.AppendLine($"Product: {assemblyDetails.Product}");
+        stringBuilder.AppendLine($"Company: {assemblyDetails.Company}");
+        stringBuilder.AppendLine($"Trademark: {assemblyDetails.Trademark}");
+        stringBuilder.AppendLine($"Copyright: {assemblyDetails.Copyright}");
+        stringBuilder.AppendLine($"License: {assemblyDetails.License}");
+        stringBuilder.AppendLine($"Version: {assemblyDetails.Version}");
+        stringBuilder.AppendLine($"Informational Version: {assemblyDetails.InformationalVersion}");
+        stringBuilder.AppendLine($"Contributors: {assemblyDetails.Contributors}");
+        stringBuilder.AppendLine($"More Info: {assemblyDetails.MoreInfo}");
+      }
+      stringBuilder.Append("\n");
       Console.Write(stringBuilder);
     }
     return ExitCodes.Success;

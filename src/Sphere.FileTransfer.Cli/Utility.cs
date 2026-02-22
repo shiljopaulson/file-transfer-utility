@@ -1,6 +1,8 @@
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json;
+using Sphere.FileTransfer.Cli.Models;
 
 namespace Sphere.FileTransfer.Cli;
 
@@ -78,13 +80,33 @@ public static class Utility
     }
   }
 
-  public static (string?, string?) GetVersion()
+  internal static AssemblyDetails? GetAssemblyDetails()
   {
-    var version = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-    if (string.IsNullOrWhiteSpace(version))
+    var entryAssembly = Assembly.GetEntryAssembly();
+    if (entryAssembly is null)
     {
-      return (string.Empty, string.Empty);
+      return null;
     }
-    return (version.Split('+')[0], version);
+    var informationalVersion = entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+    var assemblyDetails = new AssemblyDetails
+    {
+      Trademark = entryAssembly.GetCustomAttribute<AssemblyTrademarkAttribute>()?.Trademark,
+      Copyright = entryAssembly.GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright,
+      Company = entryAssembly.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company,
+      Title = entryAssembly.GetCustomAttribute<AssemblyTitleAttribute>()?.Title,
+      Description = entryAssembly.GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description,
+      Product = entryAssembly.GetCustomAttribute<AssemblyProductAttribute>()?.Product,
+      Contributors = entryAssembly.GetMetadata("Contributors"),
+      MoreInfo = entryAssembly.GetMetadata("MoreInfo"),
+      License = entryAssembly.GetMetadata("License"),
+      InformationalVersion = informationalVersion,
+      Version = informationalVersion?.Split("+")[0],
+    };
+    return assemblyDetails;
+  }
+
+  private static string? GetMetadata(this Assembly assembly, string key)
+  {
+    return assembly.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == key)?.Value;
   }
 }

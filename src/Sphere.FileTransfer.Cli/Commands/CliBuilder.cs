@@ -2,6 +2,7 @@ using System.CommandLine;
 using Microsoft.Extensions.Logging;
 using Sphere.FileTransfer.Cli.Handlers;
 using Sphere.FileTransfer.Cli.Models;
+using Sphere.FileTransfer.Cli.Options;
 
 namespace Sphere.FileTransfer.Cli.Commands;
 
@@ -37,6 +38,8 @@ public sealed class CliBuilder
     var rootDescription = $"A data driven file transfer utility which copies or moves files from one or multiple source directories to the destination directory based on the `delimited file` ({string.Join(" / ", delimiters)} files) or directory `search pattern` (Example: *.png, *.*).";
 
     var rootCommand = new RootCommand(rootDescription);
+    rootCommand.Options.Add(new InfoOption());
+
     rootCommand.Subcommands.Add(_delimitedCommand.Build());
     rootCommand.Subcommands.Add(_patternCommand.Build());
 

@@ -10,19 +10,13 @@ namespace Sphere.FileTransfer.Cli.Commands;
 
 public sealed class DelimitedCommand : BaseCommand<DelimitedOptions, DelimitedFile>
 {
-  private static readonly string _description;
   private readonly DelimitedHandler _delimitedHandler;
   private readonly ILogger<DelimitedCommand> _logger;
 
-  static DelimitedCommand()
-  {
-    var delimiters = Enum.GetNames<Delimiter>().Select(x => x.ToLowerInvariant());
-    _description = $"Copies or Movies files based on the file name entries found in the delimited file ({string.Join(" / ", delimiters)} files)";
-  }
-
   public DelimitedCommand(DelimitedHandler delimitedHandler, ILogger<DelimitedCommand> logger, string name = "delimited") : base(name, "")
   {
-    Description = _description;
+    var delimiters = Enum.GetNames<Delimiter>().Select(x => x.ToLowerInvariant());
+    Description = $"Copies or Movies files based on the file name entries found in the delimited file ({string.Join(" / ", delimiters)} files)";
     _delimitedHandler = delimitedHandler;
     _logger = logger;
   }

@@ -4,10 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>0.4.4</Version>
-    <AssemblyVersion>0.0.8.2</AssemblyVersion>
-    <FileVersion>0.0.8.2</FileVersion>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <AssemblyName>ftu.Services</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
