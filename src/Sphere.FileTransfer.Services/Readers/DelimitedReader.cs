@@ -23,13 +23,13 @@ public sealed class DelimitedReader : IDelimitedReader
   public DelimitedFile Read(string fileFullName, char delimiter, bool hasHeader, CancellationToken cancellationToken)
   {
     _logger.LogTrace("Entering IDelimitedReader => Read");
-    cancellationToken.ThrowIfCancellationRequested();
     var delimitedFile = new DelimitedFile { FileFullName = fileFullName, Delimiter = delimiter, HasHeader = hasHeader };
     var lines = new List<DelimitedFileLine>();
     var lineNumber = 0;
     var skipHeader = delimitedFile.HasHeader;
     try
     {
+      cancellationToken.ThrowIfCancellationRequested();
       string line;
 
       using StreamReader streamReader = new(delimitedFile.FileFullName, true);

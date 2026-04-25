@@ -22,7 +22,9 @@ dotnet format --verify-no-changes
 dotnet publish -c Release
 ```
 
-The pre-commit hook runs `dotnet format --verify-no-changes` on staged `.cs` files. Formatting must pass before committing.
+The pre-commit hook runs `dotnet format --verify-no-changes` on staged `.cs` files. Formatting must pass before committing. If the hook fails with a restore error, run `dotnet restore` first.
+
+`.editorconfig` sets `insert_final_newline = false` — files must not end with a trailing newline.
 
 ## Architecture
 
