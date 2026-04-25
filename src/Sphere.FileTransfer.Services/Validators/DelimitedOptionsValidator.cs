@@ -16,7 +16,7 @@ public sealed class DelimitedOptionsValidator : AbstractValidator<DelimitedOptio
     RuleFor(x => x.Destination).DirectoryMustExist();
     RuleFor(x => x.File).NotNull();
     RuleFor(x => x.File).FileMustExist();
-    RuleFor<int>(x => x.Column).GreaterThan(0);
+    RuleFor<byte>(x => x.Column).GreaterThan(0);
     RuleFor(x => x.Delimiter).NotEmpty().NotNull();
   }
 }
