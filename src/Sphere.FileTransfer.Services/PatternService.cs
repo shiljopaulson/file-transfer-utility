@@ -57,7 +57,7 @@ public sealed class PatternService : BaseFileService<PatternService>, IPatternSe
       for (var j = 0; j < segregatedDirectories[i].Files.Length; j++)
       {
         var fileName = segregatedDirectories[i].Files[j].File.Name;
-        if (fileName is null || segregatedDirectories[i] is null || segregatedDirectories[i].Files[j] is null)
+        if (segregatedDirectories[i] is null || segregatedDirectories[i].Files[j] is null)
         {
           continue;
         }
@@ -134,7 +134,7 @@ public sealed class PatternService : BaseFileService<PatternService>, IPatternSe
           Update(ref filteredFile, fileStatus, fileMessage);
           if (fileStatus == FileStatus.Processed)
           {
-            j = segregatedFiles.Length;
+            break;
           }
         }
       }
@@ -144,7 +144,7 @@ public sealed class PatternService : BaseFileService<PatternService>, IPatternSe
 
   private static SegregatedDirectory? GetDirectory(ImmutableArray<SegregatedDirectory> segregatedDirectories, SegregatedFile segregatedFile)
   {
-    return segregatedDirectories.FirstOrDefault(x => x.DirectoryPath == segregatedFile.File.FullName);
+    return segregatedDirectories.FirstOrDefault(x => x.DirectoryPath == segregatedFile.File.DirectoryName);
   }
 
   private static SegregatedFile? GetSegregatedFile(SegregatedDirectory segregatedDirectory, string fileFullName)

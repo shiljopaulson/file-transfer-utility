@@ -29,7 +29,7 @@ public sealed class DirectoryReader : IDirectoryReader
     {
       cancellationToken.ThrowIfCancellationRequested();
       var files = directoryInfo.GetFiles(searchPattern);
-      if (files is null || files.Length == 0)
+      if (files.Length == 0)
       {
         segregatedDirectory.Status = DirectoryStatus.NoMatchingFiles;
         return segregatedDirectory;

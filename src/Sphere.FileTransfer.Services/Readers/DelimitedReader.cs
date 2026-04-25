@@ -88,12 +88,6 @@ public sealed class DelimitedReader : IDelimitedReader
       delimitedFile.Status = FileStatus.Error;
       delimitedFile.Message = $"{nameof(IOException)} while reading line number {lineNumber}, {exception.Message}";
     }
-    catch (OutOfMemoryException exception)
-    {
-      _logger.LogError(exception.Message);
-      delimitedFile.Status = FileStatus.Error;
-      delimitedFile.Message = $"{nameof(OutOfMemoryException)} while reading line number {lineNumber}, {exception.Message}";
-    }
     catch (ArgumentNullException exception)
     {
       _logger.LogError(exception.Message);

@@ -11,7 +11,7 @@ public abstract class BaseFileService<T>(ILogger<T> logger)
 
   internal (FileStatus, string) CopyOrMove(string sourceFilePath, string destinationFilePath, Operation operation, bool overwrite, CancellationToken cancellationToken)
   {
-    Logger.LogTrace("Entering IDelimitedService => Process");
+    Logger.LogTrace("Entering BaseFileService => Process");
     try
     {
       cancellationToken.ThrowIfCancellationRequested();
@@ -41,45 +41,17 @@ public abstract class BaseFileService<T>(ILogger<T> logger)
       Logger.LogError(exception.Message);
       return (FileStatus.Canceled, exception.Message);
     }
-    catch (PathTooLongException exception)
+    catch (Exception ex) when (ex is PathTooLongException
+    or DirectoryNotFoundException
+    or FileNotFoundException
+    or IOException
+    or ArgumentNullException
+    or ArgumentException
+    or UnauthorizedAccessException
+    or NotSupportedException)
     {
-      Logger.LogError(exception.Message);
-      return (FileStatus.Error, exception.Message);
-    }
-    catch (DirectoryNotFoundException exception)
-    {
-      Logger.LogError(exception.Message);
-      return (FileStatus.Error, exception.Message);
-    }
-    catch (FileNotFoundException exception)
-    {
-      Logger.LogError(exception.Message);
-      return (FileStatus.Error, exception.Message);
-    }
-    catch (IOException exception)
-    {
-      Logger.LogError(exception.Message);
-      return (FileStatus.Error, exception.Message);
-    }
-    catch (ArgumentNullException exception)
-    {
-      Logger.LogError(exception.Message);
-      return (FileStatus.Error, exception.Message);
-    }
-    catch (ArgumentException exception)
-    {
-      Logger.LogError(exception.Message);
-      return (FileStatus.Error, exception.Message);
-    }
-    catch (UnauthorizedAccessException exception)
-    {
-      Logger.LogError(exception.Message);
-      return (FileStatus.Error, exception.Message);
-    }
-    catch (NotSupportedException exception)
-    {
-      Logger.LogError(exception.Message);
-      return (FileStatus.Error, exception.Message);
+      Logger.LogError(ex.Message);
+      return (FileStatus.Error, ex.Message);
     }
   }
 }
