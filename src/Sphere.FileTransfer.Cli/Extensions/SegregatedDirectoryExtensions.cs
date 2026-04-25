@@ -35,6 +35,6 @@ internal static class SegregatedDirectoryExtensions
 
   public static bool HasAnyFilesProcessed(this ImmutableArray<SegregatedDirectory> segregationDirectory)
   {
-    return segregationDirectory.All(x => x.HasAnyFilesProcessed());
+    return segregationDirectory.Any(x => x.HasAnyFilesProcessed());
   }
 }
