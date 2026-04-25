@@ -12,8 +12,8 @@ dotnet build
 dotnet test
 
 # Test (single project)
-dotnet test tests/Sphere.FileTransfer.Services.Tests/
-dotnet test tests/Sphere.FileTransfer.Cli.Tests/
+dotnet test --project tests/Sphere.FileTransfer.Services.Tests/
+dotnet test --project tests/Sphere.FileTransfer.Cli.Tests/
 
 # Format (check only — runs automatically in pre-commit hook)
 dotnet format --verify-no-changes
@@ -71,3 +71,12 @@ tests/
 - SonarAnalyzer.CSharp runs on all projects.
 - `.editorconfig` enforces 2-space indent and standard C# naming conventions (PascalCase types, camelCase locals).
 - NuGet versions are centrally managed in `Directory.Packages.props`.
+
+### Testing conventions
+
+- Test projects use xUnit v3 with `Microsoft.Testing.Platform` (`OutputType=Exe`, `TestingPlatformDotnetTestSupport=true`).
+- Test classes must be `public` (xUnit1000 — making them `internal` breaks discovery).
+- Use `TestContext.Current.CancellationToken` in async tests, not `CancellationToken.None` (xUnit1051).
+- Use `Assert.Empty`/`Assert.Single` instead of `Assert.Equal(0, ...)` / `Assert.Equal(1, ...)` (xUnit2013).
+- `internal` types cannot appear in `[Theory]` method signatures even with `InternalsVisibleTo` — use `int` with a cast instead.
+- `CA1707` is suppressed in test projects to allow underscore-separated test method names.
