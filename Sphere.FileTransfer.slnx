@@ -4,4 +4,8 @@
     <Project Path="src/Sphere.FileTransfer.Models/Sphere.FileTransfer.Models.csproj" />
     <Project Path="src/Sphere.FileTransfer.Services/Sphere.FileTransfer.Services.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Sphere.FileTransfer.Services.Tests/Sphere.FileTransfer.Services.Tests.csproj" />
+    <Project Path="tests/Sphere.FileTransfer.Cli.Tests/Sphere.FileTransfer.Cli.Tests.csproj" />
+  </Folder>
 </Solution>
