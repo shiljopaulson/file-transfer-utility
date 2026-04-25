@@ -2,12 +2,9 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 
-using Microsoft.AspNetCore.Http.Json;
-
 using Sphere.FileTransfer.Cli.Models;
 
 namespace Sphere.FileTransfer.Cli;
-
 
 internal static class Utility
 {
@@ -80,43 +77,16 @@ internal static class Utility
       // All bytes are within the ASCII range
       return true;
     }
-    catch (OperationCanceledException)
-    {
-      return false;
-    }
-    catch (ArgumentNullException)
-    {
-      return false;
-    }
-    catch (ArgumentException)
-    {
-      return false;
-    }
-    catch (PathTooLongException)
-    {
-      return false;
-    }
-    catch (DirectoryNotFoundException)
-    {
-      return false;
-    }
-    catch (FileNotFoundException)
-    {
-      return false;
-    }
-    catch (IOException)
-    {
-      return false;
-    }
-    catch (UnauthorizedAccessException)
-    {
-      return false;
-    }
-    catch (NotSupportedException)
-    {
-      return false;
-    }
-    catch (System.Security.SecurityException)
+    catch (Exception ex) when (ex is OperationCanceledException
+    or ArgumentNullException
+    or ArgumentException
+    or PathTooLongException
+    or DirectoryNotFoundException
+    or FileNotFoundException
+    or IOException
+    or UnauthorizedAccessException
+    or NotSupportedException
+    or System.Security.SecurityException)
     {
       return false;
     }

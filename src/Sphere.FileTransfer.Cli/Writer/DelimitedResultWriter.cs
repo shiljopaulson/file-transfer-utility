@@ -54,10 +54,6 @@ internal sealed class DelimitedResultWriter(IMap<char, Delimiter> charToDelimite
     Console.WriteLine($"{padding}{repeatedString}");
     Console.WriteLine();
 
-    if (result.Lines.Length == 0)
-    {
-      return;
-    }
     foreach (var item in result.Lines)
     {
       switch (item.Status)

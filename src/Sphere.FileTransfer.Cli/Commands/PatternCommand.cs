@@ -12,7 +12,7 @@ using Sphere.FileTransfer.Services.Models;
 
 namespace Sphere.FileTransfer.Cli.Commands;
 
-internal sealed class PatternCommand(PatternHandler patternHandler, ILogger<PatternCommand> logger) : BaseCommand<PatternOptions, ImmutableArray<SegregatedDirectory>>("pattern", "Copies or Movies files based on the search patterns (Example: *.png, *.txt, *.*)")
+internal sealed class PatternCommand(PatternHandler patternHandler, ILogger<PatternCommand> logger) : BaseCommand<PatternOptions, ImmutableArray<SegregatedDirectory>>("pattern", "Copies or Moves files based on the search patterns (Example: *.png, *.txt, *.*)")
 {
   private readonly PatternHandler _patternHandler = patternHandler;
   private readonly ILogger<PatternCommand> _logger = logger;

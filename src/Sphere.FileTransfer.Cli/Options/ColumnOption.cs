@@ -13,7 +13,7 @@ internal sealed class ColumnOption : Option<byte>
     Required = true;
     DefaultValueFactory = (result) =>
     {
-      return 1;
+      return (byte)1;
     };
     AddValidators();
   }
@@ -24,7 +24,7 @@ internal sealed class ColumnOption : Option<byte>
     {
       if (result.GetValue<byte>(Name) < 1)
       {
-        result.AddError($"Option '{Name}' provided value must be greater than or equal to {DefaultValueFactory}");
+        result.AddError($"Option '{Name}' provided value must be greater than or equal to 1");
       }
     });
   }

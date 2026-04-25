@@ -15,6 +15,15 @@ internal sealed class SourcesOption : Option<DirectoryInfo[]>
     AddValidators();
   }
 
+  private static bool HasDuplicates(DirectoryInfo[] directories)
+  {
+    var comparer = OperatingSystem.IsWindows()
+      ? StringComparer.OrdinalIgnoreCase
+      : StringComparer.Ordinal;
+    var normalized = directories.Select(d => Path.GetFullPath(d.FullName.TrimEnd(Path.DirectorySeparatorChar)));
+    return normalized.Distinct(comparer).Count() != directories.Length;
+  }
+
   private void AddValidators()
   {
     Validators.Add(result =>
@@ -25,7 +34,7 @@ internal sealed class SourcesOption : Option<DirectoryInfo[]>
         result.AddError($"Option '{Name}' is required");
         return;
       }
-      else if (directoryInfos.Select(x => x.FullName.TrimEnd(Path.DirectorySeparatorChar)).Distinct().Count() != directoryInfos.Length)
+      else if (HasDuplicates(directoryInfos))
       {
         result.AddError($"Option '{Name}' contains duplicates. Multiple '{Name}' entires pointing to the same directory");
         return;
@@ -40,7 +49,7 @@ internal sealed class SourcesOption : Option<DirectoryInfo[]>
         {
           result.AddError($"Option '{Name}' of [{i}] provided directory doesn't exist or lacks permission to access");
         }
-        else if (directoryInfos[i].Exists && !directoryInfos[i].EnumerateFiles().Any())
+        else if (directoryInfos[i].Exists && !directoryInfos[i].EnumerateFiles("*", SearchOption.AllDirectories).Any())
         {
           result.AddError($"Option '{Name}' of [{i}] provided directory doesn't have any files or lacks permission to access");
         }

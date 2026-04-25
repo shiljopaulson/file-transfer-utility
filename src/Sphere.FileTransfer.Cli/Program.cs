@@ -5,7 +5,6 @@ using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 using Serilog;
 using Serilog.Settings.Configuration;
@@ -47,10 +46,9 @@ internal sealed class Program
       using var host = CreateHost();
 
       var cliBuilder = host.Services.GetRequiredService<CliBuilder>();
-      host.Services.GetRequiredService<ILogger<Program>>();
       var rootCommand = cliBuilder.Build();
 
-      Log.Information("Starting {0} at {1}", APP_NAME, DateTime.Now.ToString());
+      Log.Information("Starting {AppName} at {StartTime}", APP_NAME, DateTime.Now.ToString("o"));
       return await rootCommand.Parse(args).InvokeAsync().ConfigureAwait(true);
     }
     catch (OperationCanceledException)
