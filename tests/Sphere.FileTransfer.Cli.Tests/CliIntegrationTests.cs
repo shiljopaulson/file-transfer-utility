@@ -1,6 +1,7 @@
 #pragma warning disable xUnit1051 // InvokeAsync has no CancellationToken overload in System.CommandLine 2.0
 using System.Collections.Immutable;
 using System.CommandLine;
+using System.Text.Json;
 
 using FluentValidation;
 
@@ -36,6 +37,22 @@ public sealed class CliIntegrationTests : IDisposable
   }
 
   public void Dispose() => Directory.Delete(_tempRoot, recursive: true);
+
+  private static async Task<(int ExitCode, string Output)> RunCapturingOutput(Func<Task<int>> invoke)
+  {
+    using var writer = new StringWriter();
+    var original = Console.Out;
+    Console.SetOut(writer);
+    try
+    {
+      var exitCode = await invoke().ConfigureAwait(false);
+      return (exitCode, writer.ToString());
+    }
+    finally
+    {
+      Console.SetOut(original);
+    }
+  }
 
   private static RootCommand BuildRootCommand()
   {
@@ -148,16 +165,22 @@ public sealed class CliIntegrationTests : IDisposable
   }
 
   [Fact]
-  public async Task Delimited_JsonOutputFormat_ReturnsSuccess()
+  public async Task Delimited_JsonOutputFormat_ReturnsValidJson()
   {
     const string fileName = "file.txt";
     await File.WriteAllTextAsync(Path.Combine(_sourceDir, fileName), "data", TestContext.Current.CancellationToken);
     var csvPath = Path.Combine(_tempRoot, "list.csv");
     await File.WriteAllTextAsync(csvPath, fileName, TestContext.Current.CancellationToken);
-    var exitCode = await BuildRootCommand().Parse(
+    var cmd = BuildRootCommand();
+    var (exitCode, output) = await RunCapturingOutput(() => cmd.Parse(
       ["delimited", "--file", csvPath, "--sources", _sourceDir, "--destination", _destDir, "--no-header", "--output-format", "json"])
-      .InvokeAsync();
+      .InvokeAsync());
     Assert.Equal(0, exitCode);
+    using var doc = JsonDocument.Parse(output.Trim());
+    Assert.Equal(JsonValueKind.Object, doc.RootElement.ValueKind);
+    Assert.True(doc.RootElement.TryGetProperty("FileFullName", out _));
+    Assert.True(doc.RootElement.TryGetProperty("Lines", out var lines));
+    Assert.Equal(JsonValueKind.Array, lines.ValueKind);
   }
 
   // ── pattern ───────────────────────────────────────────────────────────────
@@ -206,13 +229,22 @@ public sealed class CliIntegrationTests : IDisposable
   }
 
   [Fact]
-  public async Task Pattern_JsonOutputFormat_ReturnsSuccess()
+  public async Task Pattern_JsonOutputFormat_ReturnsValidJson()
   {
     await File.WriteAllTextAsync(Path.Combine(_sourceDir, "file.txt"), "data", TestContext.Current.CancellationToken);
-    var exitCode = await BuildRootCommand().Parse(
+    var cmd = BuildRootCommand();
+    var (exitCode, output) = await RunCapturingOutput(() => cmd.Parse(
       ["pattern", "--search-pattern", "*.txt", "--sources", _sourceDir, "--destination", _destDir, "--output-format", "json"])
-      .InvokeAsync();
+      .InvokeAsync());
     Assert.Equal(0, exitCode);
+    using var doc = JsonDocument.Parse(output.Trim());
+    Assert.Equal(JsonValueKind.Array, doc.RootElement.ValueKind);
+    var first = doc.RootElement[0];
+    Assert.True(first.TryGetProperty("DirectoryPath", out _));
+    Assert.True(first.TryGetProperty("Files", out var files));
+    var file = files[0];
+    Assert.True(file.TryGetProperty("FileName", out _));
+    Assert.True(file.TryGetProperty("FilePath", out _));
   }
 
   // ── root ──────────────────────────────────────────────────────────────────

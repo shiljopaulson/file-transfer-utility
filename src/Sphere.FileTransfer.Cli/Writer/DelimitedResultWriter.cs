@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 using Microsoft.Extensions.Logging;
 
 using Sphere.FileTransfer.Cli.Mappers;
@@ -83,6 +81,6 @@ internal sealed class DelimitedResultWriter(IMap<char, Delimiter> charToDelimite
   private static void WriteJson(DelimitedFile result, CancellationToken cancellationToken)
   {
     cancellationToken.ThrowIfCancellationRequested();
-    Console.WriteLine(JsonSerializer.Serialize(result));
+    Console.WriteLine(Utility.ToJson(result));
   }
 }
