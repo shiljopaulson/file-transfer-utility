@@ -46,6 +46,16 @@ public sealed class DirectoryReader : IDirectoryReader
       _logger.LogError(exception.Message);
       segregatedDirectory.Status = DirectoryStatus.Error;
     }
+    catch (UnauthorizedAccessException exception)
+    {
+      _logger.LogError(exception.Message);
+      segregatedDirectory.Status = DirectoryStatus.Error;
+    }
+    catch (DirectoryNotFoundException exception)
+    {
+      _logger.LogError(exception.Message);
+      segregatedDirectory.Status = DirectoryStatus.Error;
+    }
     return segregatedDirectory;
   }
 

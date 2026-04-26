@@ -49,7 +49,7 @@ public sealed class DelimitedService : BaseFileService<DelimitedService>, IDelim
     if (delimitedResult is null
       || delimitedResult.Lines.Length == 0)
     {
-      return new DelimitedFile { FileFullName = delimitedOptions.File.FullName };
+      return new DelimitedFile { FileFullName = delimitedOptions.File.FullName, Lines = [] };
     }
     var uniqueFiles = new Dictionary<string, DetailedFileInfo[]>();
     for (var i = 0; i < delimitedResult?.Lines.Length; i++)
@@ -172,7 +172,7 @@ public sealed class DelimitedService : BaseFileService<DelimitedService>, IDelim
     {
       return (LineStatus.Error, "Empty line.");
     }
-    else if (delimitedFileLine.DelimitedFields.Length < fieldIndex)
+    else if (delimitedFileLine.DelimitedFields.Length <= fieldIndex)
     {
       return (LineStatus.Error, $"Has less number of columns than expected column number '{fieldIndex + 1}'.");
     }

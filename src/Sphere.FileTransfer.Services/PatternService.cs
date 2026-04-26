@@ -68,7 +68,7 @@ public sealed class PatternService : BaseFileService<PatternService>, IPatternSe
           uniqueSourceFileNames[fileName] = [.. segregatedFiles, segregatedDirectories[i].Files[j]];
           continue;
         }
-        if (!uniqueDestinationFileNames.TryGetValue(fileName, out var _))
+        if (!uniqueDestinationFileNames.ContainsKey(fileName))
         {
           var destinationPath = Path.Combine(destination.FullName, fileName);
           var fileExistAtDestination = File.Exists(destinationPath);
@@ -114,7 +114,7 @@ public sealed class PatternService : BaseFileService<PatternService>, IPatternSe
 
           if (fileStatus == FileStatus.Processed)
           {
-            j = -1;
+            break;
           }
         }
       }
