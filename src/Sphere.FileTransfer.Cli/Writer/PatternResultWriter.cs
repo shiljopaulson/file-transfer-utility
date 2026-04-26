@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Text.Json;
 
 using Microsoft.Extensions.Logging;
 
@@ -38,7 +37,7 @@ internal sealed class PatternResultWriter(ILogger<PatternResultWriter> logger) :
     var totalUniqueFiles = result.SelectMany(x => x.Files).Select(x => x.File.Name).Distinct().Count();
     int terminalWidth = Console.WindowWidth;
     int spacing = 4;
-    string repeatedString = new('─', terminalWidth - spacing);
+    string repeatedString = new('─', Math.Max(0, terminalWidth - spacing));
     string padding = new(' ', spacing / 2);
     Console.WriteLine();
     Console.WriteLine($"{padding}{repeatedString}");
@@ -79,6 +78,13 @@ internal sealed class PatternResultWriter(ILogger<PatternResultWriter> logger) :
   private static void WriteJson(ImmutableArray<SegregatedDirectory> result, CancellationToken cancellationToken)
   {
     cancellationToken.ThrowIfCancellationRequested();
-    Console.WriteLine(JsonSerializer.Serialize(result));
+    var projection = result.Select(d => new
+    {
+      d.DirectoryPath,
+      d.Status,
+      d.Message,
+      Files = d.Files.Select(f => new { FileName = f.File.Name, FilePath = f.File.FullName, f.Status, f.Message })
+    });
+    Console.WriteLine(Utility.ToJson(projection));
   }
 }

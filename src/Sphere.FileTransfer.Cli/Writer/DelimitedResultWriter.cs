@@ -42,7 +42,7 @@ internal sealed class DelimitedResultWriter(IMap<char, Delimiter> charToDelimite
     }
     int terminalWidth = Console.WindowWidth;
     int spacing = 4;
-    string repeatedString = new('─', terminalWidth - spacing);
+    string repeatedString = new('─', Math.Max(0, terminalWidth - spacing));
     string padding = new(' ', spacing / 2);
     Console.WriteLine();
     Console.WriteLine($"{padding}{repeatedString}");

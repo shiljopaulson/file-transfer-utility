@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Sphere.FileTransfer.Cli.Models;
 
@@ -8,7 +9,7 @@ namespace Sphere.FileTransfer.Cli;
 
 internal static class Utility
 {
-  private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
+  private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true, ReferenceHandler = ReferenceHandler.IgnoreCycles };
 
   public static void WriteLine(string message, ConsoleColor consoleColor)
   {
